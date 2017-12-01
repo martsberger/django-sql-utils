@@ -41,7 +41,7 @@ Django allows us to generate this SQL using The Subquery and OuterRef classes::
 
 Holy cow! It's not trivial to figure what everything is doing in the above
 code and it's not particularly good for maintenance. SubqueryAggregates allows
-you to forget all that complexity and generate the subquery count like this:
+you to forget all that complexity and generate the subquery count like this::
 
     Parent.objects.annotate(child_count=SubqueryCount('child', reverse='parent'))
 
