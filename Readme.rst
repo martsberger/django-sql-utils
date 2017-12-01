@@ -1,3 +1,7 @@
+.. image:: https://travis-ci.org/martsberger/django-sql-utils.svg?branch=master
+    :target: https://travis-ci.org/martsberger/django-sql-utils
+
+
 Django SQL Utils
 ================
 
