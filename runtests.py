@@ -14,9 +14,12 @@ def parse_args():
         sys.exit(1)
 
     if not options.unittest:
-        options.unittest = ['pivot']
+        options.unittest = []
+    else:
+        options.unittest = [options.unittest]
 
     return options
+
 
 if __name__ == '__main__':
     options = parse_args()
@@ -32,4 +35,5 @@ if __name__ == '__main__':
 
     TestRunner = get_runner(settings)
     runner = TestRunner(verbosity=1, interactive=True, failfast=False)
-    sys.exit(runner.run_tests([]))
+    print("unittest", options.unittest)
+    sys.exit(runner.run_tests(options.unittest))
