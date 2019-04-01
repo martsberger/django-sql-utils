@@ -20,7 +20,7 @@ class SubqueryAggregate(Subquery):
         self.unordered = kwargs.pop('unordered', self.unordered)
         original_output_field = kwargs.get('output_field')
         kwargs['output_field'] = original_output_field or ''  # Have to pass non None output_field to super
-        super(SubqueryAggregate).__init__(None, *args, **kwargs)
+        super(SubqueryAggregate, self).__init__(None, *args, **kwargs)
         self.output_field = original_output_field  # Set the output_field back
 
     def resolve_expression(self, query=None, allow_joins=True, reuse=None, summarize=False, for_save=False):
