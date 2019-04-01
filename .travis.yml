@@ -34,7 +34,7 @@ matrix:
 
 before_script:
   - if [[ "$DB" == "mysql" ]]; then mysql -e 'create database sqlutil;'; fi
-  - if [ "$DB" == "postgres" ]; then psql -c 'create database sqlutil;' -U postgres; fi`
+  - if [ "$DB" == "postgres" ]; then psql -c 'create database sqlutil;' -U postgres; fi
 install:
   - pip install pip --upgrade
   - if [[ "$DB" == "mysql" && ("$DJANGO" == "1.11" || "$DJANGO" == "2.0") ]]; then pip install mysqlclient\<=1.3.13; fi
