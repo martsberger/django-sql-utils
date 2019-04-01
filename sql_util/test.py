@@ -11,7 +11,7 @@ class TestParentChild(TestCase):
 
     @classmethod
     def setUpClass(cls):
-        super(TestParentChild, self).setUpClass()
+        super(TestParentChild, cls).setUpClass()
         parents = [
             Parent.objects.create(name='John'),
             Parent.objects.create(name='Jane')
@@ -85,7 +85,7 @@ class TestManyToMany(TestCase):
 
     @classmethod
     def setUpClass(cls):
-        super(TestManyToMany, self).setUpClass()
+        super(TestManyToMany, cls).setUpClass()
         publishers = [
             Publisher.objects.create(name='Publisher 1', number=1),
             Publisher.objects.create(name='Publisher 2', number=2)
@@ -210,7 +210,7 @@ class TestReverseForeignKey(TestCase):
 
     @classmethod
     def setUpClass(cls):
-        super(TestReverseForeignKey, self).setUpClass()
+        super(TestReverseForeignKey, cls).setUpClass()
         catalogs = [
             Catalog.objects.create(number='A'),
             Catalog.objects.create(number='B')
