@@ -17,18 +17,18 @@ The `Count` aggregation in Django::
 
 generates SQL like the following::
 
-    SELECT parent.*, Count(child.id)
+    SELECT parent.*, Count(child.id) as child_count
     FROM parent
     JOIN child on child.parent_id = parent.id
     GROUP BY parent.id
 
-In some cases, this is not as performant as doing the count in a SUBQUERY
-instead of a JOIN::
+In many cases, this is not as performant as doing the count in a SUBQUERY
+instead of with a JOIN::
 
-    SELECT parent.*
-           SELECT Count(id)
-           FROM child
-           WHERE parent_id = parent.id
+    SELECT parent.*,
+           (SELECT Count(id)
+            FROM child
+            WHERE parent_id = parent.id) as child_count
     FROM parent
 
 Django allows us to generate this SQL using The Subquery and OuterRef classes::
@@ -43,9 +43,10 @@ Holy cow! It's not trivial to figure what everything is doing in the above
 code and it's not particularly good for maintenance. SubqueryAggregates allows
 you to forget all that complexity and generate the subquery count like this::
 
-    Parent.objects.annotate(child_count=SubqueryCount('child', reverse='parent'))
+    Parent.objects.annotate(child_count=SubqueryCount('child'))
 
-Phew! Much easier to read and understand.
+Phew! Much easier to read and understand. It's the same API as the original `Count`
+just specifying the Subquery version.
 
 In addition to `SubqueryCount`, this package provides `SubqueryMin` and
 `SubqueryMax`. If you want to use other aggregates, you can use the
@@ -53,7 +54,16 @@ generic `SubqueryAggregate` class::
 
     from django.db.models import Avg, DecimalField
 
-    aggregate = SubqueryAggregate('child__age', aggregate=Avg, reverse='parent',
+    aggregate = SubqueryAggregate('child__age', aggregate=Avg,
                                    output_field=DecimalField())
     Parent.objects.annotate(avg_child_age=aggregate)
 
+Or subclass SubqueryAggregate::
+
+    from django.db.models import Avg
+
+    class SubqueryAvg(SubqueryAggregate)
+        aggregate = Avg
+        unordered = True
+
+    Parent.objects.annotate(avg_child_age=SubqueryAvg('child__age')
