@@ -7,11 +7,10 @@ class SubqueryAggregate(Subquery):
     aggregate = None  # Must be set by the subclass, or passed as kwarg
     unordered = None
 
-    def __init__(self, expression, reverse=None, *args, **kwargs):
+    def __init__(self, expression, *args, **kwargs):
         if not hasattr(expression, 'resolve_expression'):
             expression = F(expression)
         self.expression = expression
-        self.reverse = reverse
         self.filter = kwargs.pop('filter', Q())
         self.aggregate = kwargs.pop('aggregate', self.aggregate)
         self.distinct = kwargs.pop('distinct', None)
