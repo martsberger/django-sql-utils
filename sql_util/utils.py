@@ -53,7 +53,7 @@ class SubqueryAggregate(Subquery):
 
         outer_ref = self.outer_ref or outer_ref
         q = self.filter & Q(**{reverse: OuterRef(outer_ref)})
-        queryset = model._default_manager.filter(q)
+        queryset = queryset.filter(q)
         if self.unordered:
             queryset = queryset.order_by()
         return queryset.values(reverse).annotate(**annotation).values('aggregation')
