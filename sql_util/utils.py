@@ -42,9 +42,9 @@ class SubqueryAggregate(Subquery):
         if not self.output_field:
             self._output_field = self.output_field = target_expression.field
         if self.distinct is not None:
-            aggregation = self.aggregate(target_expression, distinct=self.distinct)
+            aggregation = self.aggregate(target_expression, distinct=self.distinct, output_field=self.output_field)
         else:
-            aggregation = self.aggregate(target_expression)
+            aggregation = self.aggregate(target_expression, output_field=self.output_field)
         annotation = {
             'aggregation': aggregation
         }

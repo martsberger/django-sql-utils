@@ -71,7 +71,7 @@ class TestParentChild(TestCase):
 
     def test_function(self):
         annotation = {
-            'oldest_child_with_other': SubqueryMin(Coalesce('child__other_timestamp', 'child__timestamp', output_field=DateTimeField()),
+            'oldest_child_with_other': SubqueryMin(Coalesce('child__other_timestamp', 'child__timestamp'),
                                                    output_field=DateTimeField())
         }
         parents = Parent.objects.filter(name='John').annotate(**annotation)
