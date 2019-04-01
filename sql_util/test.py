@@ -78,6 +78,12 @@ class TestParentChild(TestCase):
 
         oldest_child = Child.objects.filter(parent__name='John').order_by(Coalesce('other_timestamp', 'timestamp').asc())[0]
 
+        print("type of annotation", type(parents[0].oldest_child_with_other))
+        print("type of raw data", type(oldest_child.other_timestamp or oldest_child.timestamp))
+
+        print("annotation", parents[0].oldest_child_with_other)
+        print("raw data", oldest_child.other_timestamp or oldest_child.timestamp)
+
         self.assertEqual(parents[0].oldest_child_with_other, oldest_child.other_timestamp or oldest_child.timestamp)
 
 
