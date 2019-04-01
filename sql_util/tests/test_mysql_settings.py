@@ -3,7 +3,7 @@ BACKEND = 'mysql'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'utils',
+        'NAME': 'sqlutil',
     }
 }
 

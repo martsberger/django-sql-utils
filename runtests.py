@@ -35,5 +35,4 @@ if __name__ == '__main__':
 
     TestRunner = get_runner(settings)
     runner = TestRunner(verbosity=1, interactive=True, failfast=False)
-    print("unittest", options.unittest)
     sys.exit(runner.run_tests(options.unittest))

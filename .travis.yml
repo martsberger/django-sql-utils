@@ -13,8 +13,8 @@ env:
   - DJANGO=1.11 DB=postgres
 
 before_script:
-  - mysql -e 'create database pivot;'
-  - psql -c 'create database pivot;' -U postgres
+  - mysql -e 'create database sqlutil;'
+  - psql -c 'create database sqlutil;' -U postgres
 install:
   - pip install pip --upgrade
   - if [ "$DB" == "mysql" ]; then pip install mysqlclient; fi
