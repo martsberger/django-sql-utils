@@ -1,5 +1,3 @@
-import sqlparse
-
 from django.db.models import DateTimeField, Q
 from django.db.models.functions import Coalesce
 from django.test import TestCase
@@ -7,13 +5,6 @@ from django.test import TestCase
 from sql_util.tests.models import (Parent, Child, Author, Book, BookAuthor, BookEditor, Publisher, Catalog, Package,
                                    Purchase, CatalogInfo)
 from sql_util.utils import SubqueryMin, SubqueryMax, SubqueryCount
-
-
-def print_sql(queryset):
-    """
-    Utility method for debugging, prints out nicely formatted SQL query for the queryset
-    """
-    print(sqlparse.format(str(queryset.query), reindent=True))
 
 
 class TestParentChild(TestCase):
