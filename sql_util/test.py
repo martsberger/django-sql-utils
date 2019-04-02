@@ -1,5 +1,6 @@
+from django.conf import settings
 from django.db.models import DateTimeField, Q
-from django.db.models.functions import Coalesce
+from django.db.models.functions import Coalesce, Cast
 from django.test import TestCase
 
 from sql_util.tests.models import (Parent, Child, Author, Book, BookAuthor, BookEditor, Publisher, Catalog, Package,
@@ -70,19 +71,22 @@ class TestParentChild(TestCase):
         self.assertEqual(counts, {'John': 2, 'Jane': 0})
 
     def test_function(self):
-        annotation = {
-            'oldest_child_with_other': SubqueryMin(Coalesce('child__other_timestamp', 'child__timestamp'),
-                                                   output_field=DateTimeField())
-        }
+        if settings.BACKEND == 'mysql':
+            # Explicit cast for MySQL with Coalesce and Datetime
+            # https://docs.djangoproject.com/en/2.1/ref/models/database-functions/#coalesce
+            annotation = {
+                'oldest_child_with_other': Cast(SubqueryMin(Coalesce('child__other_timestamp', 'child__timestamp'),
+                                                            output_field=DateTimeField()), DateTimeField())
+            }
+        else:
+            annotation = {
+                'oldest_child_with_other': SubqueryMin(Coalesce('child__other_timestamp', 'child__timestamp'),
+                                                       output_field=DateTimeField())
+            }
+
         parents = Parent.objects.filter(name='John').annotate(**annotation)
 
         oldest_child = Child.objects.filter(parent__name='John').order_by(Coalesce('other_timestamp', 'timestamp').asc())[0]
-
-        print("type of annotation", type(parents[0].oldest_child_with_other))
-        print("type of raw data", type(oldest_child.other_timestamp or oldest_child.timestamp))
-
-        print("annotation", parents[0].oldest_child_with_other)
-        print("raw data", oldest_child.other_timestamp or oldest_child.timestamp)
 
         self.assertEqual(parents[0].oldest_child_with_other, oldest_child.other_timestamp or oldest_child.timestamp)
 
