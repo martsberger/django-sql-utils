@@ -7,15 +7,15 @@ services:
   - mysql
   - postgresql
 env:
-#  - DJANGO=1.11 DB=sqlite
+  - DJANGO=1.11 DB=sqlite
   - DJANGO=1.11 DB=mysql
-#  - DJANGO=1.11 DB=postgres
-#  - DJANGO=2.0 DB=sqlite
+  - DJANGO=1.11 DB=postgres
+  - DJANGO=2.0 DB=sqlite
   - DJANGO=2.0 DB=mysql
-#  - DJANGO=2.0 DB=postgres
-#  - DJANGO=2.1 DB=sqlite
+  - DJANGO=2.0 DB=postgres
+  - DJANGO=2.1 DB=sqlite
   - DJANGO=2.1 DB=mysql
-#  - DJANGO=2.1 DB=postgres
+  - DJANGO=2.1 DB=postgres
 matrix:
   exclude:
     - python: "2.7"
