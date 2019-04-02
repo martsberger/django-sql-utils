@@ -6,7 +6,7 @@ Django SQL Utils
 ================
 
 This package provides utilities for working with Django querysets so that
-you can generate the SQL that you want.
+you can generate the SQL that you want, with an API you enjoy.
 
 Subquery Aggregates
 -------------------
@@ -40,7 +40,7 @@ Django allows us to generate this SQL using The Subquery and OuterRef classes::
     Parent.objects.annotate(child_count=Coalesce(subquery, 0))
 
 Holy cow! It's not trivial to figure what everything is doing in the above
-code and it's not particularly good for maintenance. SubqueryAggregates allows
+code and it's not particularly good for maintenance. SubqueryAggregates allow
 you to forget all that complexity and generate the subquery count like this::
 
     Parent.objects.annotate(child_count=SubqueryCount('child'))
@@ -67,3 +67,4 @@ Or subclass SubqueryAggregate::
         unordered = True
 
     Parent.objects.annotate(avg_child_age=SubqueryAvg('child__age')
+
