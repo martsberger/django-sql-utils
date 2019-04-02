@@ -21,7 +21,8 @@ class SubqueryAggregate(Subquery):
         self.unordered = unordered or self.unordered
         # Have to pass non None output_field to super
         super(SubqueryAggregate, self).__init__(None, output_field='', **extra)
-        self._output_field = output_field
+        # Django 1.11 we have to assign to self.output_field. Django >2.0 we can assign to self._output_field
+        self.output_field = output_field
 
     def resolve_expression(self, query=None, allow_joins=True, reuse=None, summarize=False, for_save=False):
         self.queryset = self.get_queryset(query.clone(), allow_joins, reuse, summarize)
