@@ -7,21 +7,21 @@ class SubqueryAggregate(Subquery):
     aggregate = None  # Must be set by the subclass, or passed as kwarg
     unordered = None
 
-    def __init__(self, expression, *args, **kwargs):
+    def __init__(self, expression, filter=Q(), aggregate=None, distinct=None, outer_ref=None, unordered=None,
+                 output_field=None, **extra):
         if not hasattr(expression, 'resolve_expression'):
             expression = F(expression)
         self.expression = expression
-        self.filter = kwargs.pop('filter', Q())
-        self.aggregate = kwargs.pop('aggregate', self.aggregate)
-        self.distinct = kwargs.pop('distinct', None)
-        self.outer_ref = kwargs.pop('outer_ref', None)
+        self.filter = filter
+        self.aggregate = aggregate or self.aggregate
+        self.distinct = distinct
+        self.outer_ref = outer_ref
         assert self.aggregate is not None, "Error: Attempt to instantiate a " \
                                            "SubqueryAggregate with no aggregate function"
-        self.unordered = kwargs.pop('unordered', self.unordered)
-        original_output_field = kwargs.get('output_field')
-        kwargs['output_field'] = original_output_field or ''  # Have to pass non None output_field to super
-        super(SubqueryAggregate, self).__init__(None, *args, **kwargs)
-        self.output_field = original_output_field  # Set the output_field back
+        self.unordered = unordered or self.unordered
+        # Have to pass non None output_field to super
+        super(SubqueryAggregate, self).__init__(None, output_field='', **extra)
+        self._output_field = output_field
 
     def resolve_expression(self, query=None, allow_joins=True, reuse=None, summarize=False, for_save=False):
         self.queryset = self.get_queryset(query.clone(), allow_joins, reuse, summarize)
@@ -40,7 +40,7 @@ class SubqueryAggregate(Subquery):
         # Add test for output_field, distinct, and when resolved_expression.field.name isn't what we're aggregating
 
         if not self.output_field:
-            self._output_field = self.output_field = target_expression.field
+            self.output_field = target_expression.field
         if self.distinct is not None:
             aggregation = self.aggregate(target_expression, distinct=self.distinct)
         else:
