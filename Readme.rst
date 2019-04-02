@@ -48,14 +48,27 @@ you to forget all that complexity and generate the subquery count like this::
 Phew! Much easier to read and understand. It's the same API as the original `Count`
 just specifying the Subquery version.
 
+Installation and Usage
+----------------------
+
+Install from PyPI::
+
+    pip install django-sql-utils
+
+Then you can::
+
+    from sql_util.utils import SubqueryCount
+
+And use that as shown above.
+
 In addition to `SubqueryCount`, this package provides `SubqueryMin` and
 `SubqueryMax`. If you want to use other aggregates, you can use the
-generic `SubqueryAggregate` class::
+generic `SubqueryAggregate` class. For example, if the `Child` model stored
+an age column and you wanted the average age of each `Parent` s children::
 
     from django.db.models import Avg, DecimalField
 
-    aggregate = SubqueryAggregate('child__age', aggregate=Avg,
-                                   output_field=DecimalField())
+    aggregate = SubqueryAggregate('child__age', aggregate=Avg)
     Parent.objects.annotate(avg_child_age=aggregate)
 
 Or subclass SubqueryAggregate::
