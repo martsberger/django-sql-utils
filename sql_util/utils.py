@@ -6,7 +6,7 @@ from django.db.models.constants import LOOKUP_SEP
 class Subquery(DjangoSubquery):
     def __init__(self, queryset_or_expression, **extra):
         if isinstance(queryset_or_expression, QuerySet):
-            super().__init__(queryset_or_expression, **extra)
+            super(Subquery, self).__init__(queryset_or_expression, **extra)
         else:
             expression = queryset_or_expression
             if not hasattr(expression, 'resolve_expression'):
@@ -18,7 +18,7 @@ class Subquery(DjangoSubquery):
             self.unordered = extra.pop('unordered', self.unordered)
             original_output_field = extra.get('output_field')
             extra['output_field'] = original_output_field or ''  # Have to pass non None output_field to super
-            super().__init__(None, **extra)
+            super(Subquery, self).__init__(None, **extra)
             self.output_field = original_output_field  # Set the output_field back
 
     def resolve_expression(self, query=None, allow_joins=True, reuse=None, summarize=False, for_save=False):
@@ -28,7 +28,7 @@ class Subquery(DjangoSubquery):
         # which is the first parameter of this method.
         if self.queryset is None:
             self.queryset = self.get_queryset(query.clone(), allow_joins, reuse, summarize)
-        return super().resolve_expression(query, allow_joins, reuse, summarize, for_save)
+        return super(Subquery, self).resolve_expression(query, allow_joins, reuse, summarize, for_save)
 
     def get_queryset(self, query, allow_joins, reuse, summarize):
         # This is a customization hook for child classes to override the base queryset computed automatically
@@ -141,7 +141,7 @@ class SubqueryAggregate(Subquery):
         self.aggregate = extra.pop('aggregate', self.aggregate)
         assert self.aggregate is not None, "Error: Attempt to instantiate a " \
                                            "SubqueryAggregate with no aggregate function"
-        super().__init__(*args, **extra)
+        super(SubqueryAggregate, self).__init__(*args, **extra)
 
     def get_queryset(self, query, allow_joins, reuse, summarize):
         queryset = self._get_base_queryset(query, allow_joins, reuse, summarize)
@@ -214,14 +214,14 @@ class Exists(Subquery):
 
     def __init__(self, *args, negated=False, **kwargs):
         self.negated = negated
-        super().__init__(*args, **kwargs)
+        super(Exists, self).__init__(*args, **kwargs)
 
     def __invert__(self):
         # Be careful not to evaluate self.queryset on this line
         return type(self)(self.queryset if self.queryset is not None else self.expression, negated=(not self.negated), **self.extra)
 
     def as_sql(self, compiler, connection, template=None, **extra_context):
-        sql, params = super().as_sql(compiler, connection, template, **extra_context)
+        sql, params = super(Exists, self).as_sql(compiler, connection, template, **extra_context)
         if self.negated:
             sql = 'NOT {}'.format(sql)
         return sql, params
