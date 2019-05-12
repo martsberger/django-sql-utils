@@ -1,11 +1,11 @@
 from django.conf import settings
-from django.db.models import DateTimeField, Q
+from django.db.models import DateTimeField, Q, OuterRef
 from django.db.models.functions import Coalesce, Cast
 from django.test import TestCase
 
 from sql_util.tests.models import (Parent, Child, Author, Book, BookAuthor, BookEditor, Publisher, Catalog, Package,
                                    Purchase, CatalogInfo)
-from sql_util.utils import SubqueryMin, SubqueryMax, SubqueryCount
+from sql_util.utils import SubqueryMin, SubqueryMax, SubqueryCount, Exists
 
 
 class TestParentChild(TestCase):
@@ -268,3 +268,129 @@ class TestReverseForeignKey(TestCase):
 
         self.assertEqual(extremes, {'cat A info': (6, 4),
                                     'cat B info': (12, 11)})
+
+
+class TestExists(TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        super(TestExists, cls).setUpClass()
+
+        parents = [
+            Parent.objects.create(name='John'),
+            Parent.objects.create(name='Jane')
+        ]
+
+        children = [
+            Child.objects.create(parent=parents[0], name='Joe', timestamp='2017-06-01', other_timestamp=None),
+            Child.objects.create(parent=parents[0], name='Jan', timestamp='2017-07-01', other_timestamp=None),
+            Child.objects.create(parent=parents[0], name='Jan', timestamp='2017-05-01', other_timestamp='2017-08-01')
+        ]
+
+    def test_original_exists(self):
+        ps = Parent.objects.annotate(has_children=Exists(Child.objects.filter(parent=OuterRef('pk')))).order_by('pk')
+        ps = list(ps)
+
+        self.assertEqual(ps[0].has_children, True)
+        self.assertEqual(ps[1].has_children, False)
+
+    def test_easy_exists(self):
+        ps = Parent.objects.annotate(has_children=Exists('child')).order_by('pk')
+        ps = list(ps)
+
+        self.assertEqual(ps[0].has_children, True)
+        self.assertEqual(ps[1].has_children, False)
+
+    def test_negated_exists(self):
+        ps = Parent.objects.annotate(has_children=~Exists(Child.objects.filter(parent=OuterRef('pk')))).order_by('pk')
+        ps = list(ps)
+
+        self.assertEqual(ps[0].has_children, False)
+        self.assertEqual(ps[1].has_children, True)
+
+    def test_easy_negated_exists(self):
+        ps = Parent.objects.annotate(has_children=~Exists('child')).order_by('pk')
+        ps = list(ps)
+
+        self.assertEqual(ps[0].has_children, False)
+        self.assertEqual(ps[1].has_children, True)
+
+
+class TestManyToManyExists(TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        super(TestManyToManyExists, cls).setUpClass()
+        publishers = [
+            Publisher.objects.create(name='Publisher 1', number=1),
+            Publisher.objects.create(name='Publisher 2', number=2)
+        ]
+
+        authors = [
+            Author.objects.create(name='Author 1'),
+            Author.objects.create(name='Author 2'),
+            Author.objects.create(name='Author 3'),
+            Author.objects.create(name='Author 4'),
+            Author.objects.create(name='Author 5'),
+            Author.objects.create(name='Author 6')
+        ]
+
+        books = [
+            Book.objects.create(title='Book 1', publisher=publishers[0]),
+            Book.objects.create(title='Book 2', publisher=publishers[0]),
+            Book.objects.create(title='Book 3', publisher=publishers[1]),
+            Book.objects.create(title='Book 4', publisher=publishers[1])
+        ]
+
+        book_authors = [
+            BookAuthor.objects.create(author=authors[0], book=books[0], id=1),
+            BookAuthor.objects.create(author=authors[1], book=books[1], id=2),
+            BookAuthor.objects.create(author=authors[2], book=books[1], id=3),
+            BookAuthor.objects.create(author=authors[2], book=books[2], id=4),
+            BookAuthor.objects.create(author=authors[3], book=books[2], id=5),
+            BookAuthor.objects.create(author=authors[4], book=books[3], id=6),
+        ]
+
+        book_editors = [
+            BookEditor.objects.create(editor=authors[5], book=books[3]),
+            BookEditor.objects.create(editor=authors[5], book=books[3]),
+        ]
+
+    def test_forward(self):
+        books = Book.objects.annotate(has_authors=Exists('authors')).order_by('id')
+        for book in books:
+            self.assertTrue(book.has_authors)
+
+        # Only book 4 has editors
+        books = Book.objects.annotate(has_editors=Exists('editors')).order_by('id')
+        editors = {book.title: book.has_editors for book in books}
+
+        self.assertEqual(editors, {'Book 1': False,
+                                   'Book 2': False,
+                                   'Book 3': False,
+                                   'Book 4': True})
+
+    def test_reverse(self):
+        authors = Author.objects.annotate(has_books=Exists('authored_books')).order_by('id')
+        books = {author.name: author.has_books for author in authors}
+
+        self.assertEqual(books, {'Author 1': True,
+                                 'Author 2': True,
+                                 'Author 3': True,
+                                 'Author 4': True,
+                                 'Author 5': True,
+                                 'Author 6': False})
+
+    def test_two_joins(self):
+        authors = Author.objects.annotate(has_editors=Exists('authored_books__editors')).order_by('id')
+
+        # Only author 5 has written a book with editors
+
+        editors = {author.name: author.has_editors for author in authors}
+
+        self.assertEqual(editors, {'Author 1': False,
+                                   'Author 2': False,
+                                   'Author 3': False,
+                                   'Author 4': False,
+                                   'Author 5': True,
+                                   'Author 6': False})

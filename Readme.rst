@@ -48,6 +48,28 @@ you to forget all that complexity and generate the subquery count like this::
 Phew! Much easier to read and understand. It's the same API as the original `Count`
 just specifying the Subquery version.
 
+Easier API for Exists
+---------------------
+If you have a Parent/Child relationship (Child has a ForeignKey to Parent), you can annotate a queryset
+of Parent objects with a boolean indicating whether or not the parent has children::
+
+    from django.db.models import Exists
+
+    parents = Parent.objects.annotate(
+        has_children=Exists(Child.objects.filter(parent=OuterRef('pk'))
+    )
+
+That's a bit more boilerplate than should be necessary, so we provide a simpler API for Exists::
+
+    from sql_util.utils import Exists
+
+    parents = Parent.objects.annotate(
+        has_children=Exists('child')
+    )
+
+The `sql_util` version of `Exists` can also take a queryset as the first parameter and behave just like
+the Django `Exists` class, so you are able to use it everywhere without worrying about name confusion.
+
 Installation and Usage
 ----------------------
 
