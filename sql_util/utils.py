@@ -212,8 +212,8 @@ class Exists(Subquery):
     template = 'EXISTS(%(subquery)s)'
     output_field = BooleanField()
 
-    def __init__(self, *args, negated=False, **kwargs):
-        self.negated = negated
+    def __init__(self, *args, **kwargs):
+        self.negated = kwargs.pop('negated', False)
         super(Exists, self).__init__(*args, **kwargs)
 
     def __invert__(self):
