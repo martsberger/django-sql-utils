@@ -394,3 +394,15 @@ class TestManyToManyExists(TestCase):
                                    'Author 4': False,
                                    'Author 5': True,
                                    'Author 6': False})
+
+    def test_filter(self):
+        authors = Author.objects.annotate(published_by_1=Exists('authored_books', filter=Q(book__publisher_id=1)))
+
+        authors = {author.name: author.published_by_1 for author in authors}
+
+        self.assertEqual(authors, {'Author 1': True,
+                                   'Author 2': True,
+                                   'Author 3': True,
+                                   'Author 4': False,
+                                   'Author 5': False,
+                                   'Author 6': False})
