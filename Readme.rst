@@ -67,6 +67,12 @@ That's a bit more boilerplate than should be necessary, so we provide a simpler 
         has_children=Exists('child')
     )
 
+The child queryset can be filtered with the keyword argument `filter`. E.g.,::
+
+    parents = Parent.objects.annotate(
+        has_child_named_John = Exists('child', filter=Q(name='John'))
+    )
+
 The `sql_util` version of `Exists` can also take a queryset as the first parameter and behave just like
 the Django `Exists` class, so you are able to use it everywhere without worrying about name confusion.
 
