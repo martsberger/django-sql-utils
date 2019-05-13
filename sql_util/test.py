@@ -396,7 +396,8 @@ class TestManyToManyExists(TestCase):
                                    'Author 6': False})
 
     def test_filter(self):
-        authors = Author.objects.annotate(published_by_1=Exists('authored_books', filter=Q(book__publisher_id=1)))
+        publisher_id = Publisher.objects.get(name='Publisher 1').id
+        authors = Author.objects.annotate(published_by_1=Exists('authored_books', filter=Q(book__publisher_id=publisher_id)))
 
         authors = {author.name: author.published_by_1 for author in authors}
 
