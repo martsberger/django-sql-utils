@@ -1,5 +1,5 @@
-from django.db.models import Q, F, QuerySet, BooleanField
-from django.db.models import Subquery as DjangoSubquery, OuterRef, IntegerField, Min, Max, Count, Exists as DjangoExists
+from django.db.models import Q, F, QuerySet, BooleanField, Sum, Avg
+from django.db.models import Subquery as DjangoSubquery, OuterRef, IntegerField, Min, Max, Count
 from django.db.models.constants import LOOKUP_SEP
 
 
@@ -204,6 +204,16 @@ class SubqueryMin(SubqueryAggregate):
 
 class SubqueryMax(SubqueryAggregate):
     aggregate = Max
+    unordered = True
+
+
+class SubquerySum(SubqueryAggregate):
+    aggregate = Sum
+    unordered = True
+
+
+class SubqueryAvg(SubqueryAggregate):
+    aggregate = Avg
     unordered = True
 
 
