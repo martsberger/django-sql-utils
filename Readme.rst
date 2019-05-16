@@ -89,23 +89,29 @@ Then you can::
 
 And use that as shown above.
 
-In addition to `SubqueryCount`, this package provides `SubqueryMin` and
-`SubqueryMax`. If you want to use other aggregates, you can use the
-generic `SubqueryAggregate` class. For example, if the `Child` model stored
-an age column and you wanted the average age of each `Parent` s children::
+In addition to `SubqueryCount`, this package provides
 
-    from django.db.models import Avg, DecimalField
+* `SubqueryMin`
+* `SubqueryMax`
+* `SubquerySum`
+* `SubqueryAvg`
 
-    aggregate = SubqueryAggregate('child__age', aggregate=Avg)
-    Parent.objects.annotate(avg_child_age=aggregate)
+If you want to use other aggregates, you can use the
+generic `SubqueryAggregate` class. For example, if you want to use Postgres' `ArrayAgg`
+to get an array of `Child.name` for each `Parent`::
+
+    from django.contrib.postgres.aggregates import ArrayAgg
+
+    aggregate = SubqueryAggregate('child__name', aggregate=ArrayAgg)
+    Parent.objects.annotate(child_names=aggregate)
 
 Or subclass SubqueryAggregate::
 
-    from django.db.models import Avg
+    from django.contrib.postgres.aggregates import ArrayAgg
 
-    class SubqueryAvg(SubqueryAggregate)
-        aggregate = Avg
+    class SubqueryArrayAgg(SubqueryAggregate)
+        aggregate = ArrayAgg
         unordered = True
 
-    Parent.objects.annotate(avg_child_age=SubqueryAvg('child__age')
+    Parent.objects.annotate(avg_child_age=SubqueryArrayAgg('child__age'))
 
