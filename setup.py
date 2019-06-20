@@ -2,17 +2,20 @@ from setuptools import setup, find_packages
 
 
 def read_file(name):
-    with open(name) as fd:
-        return fd.read()
+    try:
+        with open(name) as fd:
+            return fd.read()
+    except IOError:
+        return ''
 
 
 setup(
     name='django-sql-utils',
-    version='0.2.1',
+    version='0.2.2',
     description='Improved API for aggregating using Subquery',
     long_description=read_file('README.rst'),
     url='https://github.com/martsberger/django-sql-utils',
-    download_url='https://github.com/martsberger/django-sql-utils/archive/0.2.1.tar.gz',
+    download_url='https://github.com/martsberger/django-sql-utils/archive/0.2.2.tar.gz',
     author='Brad Martsberger',
     author_email='bmarts@lumere.com',
     license='MIT',
