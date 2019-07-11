@@ -28,5 +28,5 @@ setup(
         'Programming Language :: Python :: 3.7'
     ],
     packages=find_packages(),
-    install_requires=['django>=1.11']
+    install_requires=['django>=1.11', 'sqlparse']
 )
