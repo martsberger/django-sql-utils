@@ -100,7 +100,7 @@ class TestManyToMany(TestCase):
             Publisher.objects.create(name='Publisher 1', number=1),
             Publisher.objects.create(name='Publisher 2', number=2)
         ]
-        
+
         authors = [
             Author.objects.create(name='Author 1'),
             Author.objects.create(name='Author 2'),
@@ -398,6 +398,20 @@ class TestManyToManyExists(TestCase):
     def test_filter(self):
         publisher_id = Publisher.objects.get(name='Publisher 1').id
         authors = Author.objects.annotate(published_by_1=Exists('authored_books', filter=Q(book__publisher_id=publisher_id)))
+
+        authors = {author.name: author.published_by_1 for author in authors}
+
+        self.assertEqual(authors, {'Author 1': True,
+                                   'Author 2': True,
+                                   'Author 3': True,
+                                   'Author 4': False,
+                                   'Author 5': False,
+                                   'Author 6': False})
+
+    def test_filter_last_join(self):
+        publisher_id = Publisher.objects.get(name='Publisher 1').id
+        authors = Author.objects.annotate(
+            published_by_1=Exists('authored_books__publisher', filter=Q(id=publisher_id)))
 
         authors = {author.name: author.published_by_1 for author in authors}
 

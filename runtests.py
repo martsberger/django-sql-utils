@@ -7,6 +7,7 @@ def parse_args():
     parser = OptionParser()
     parser.add_option('-s', '--settings', help='Define settings.')
     parser.add_option('-t', '--unittest', help='Define which test to run. Default all.')
+    parser.add_option('-v', '--verbosity', help='Set the verbosity level.', default=1, type=int)
     options, args = parser.parse_args()
 
     if not options.settings:
@@ -34,5 +35,5 @@ if __name__ == '__main__':
         django.setup()
 
     TestRunner = get_runner(settings)
-    runner = TestRunner(verbosity=1, interactive=True, failfast=False)
+    runner = TestRunner(verbosity=options.verbosity, interactive=True, failfast=False)
     sys.exit(runner.run_tests(options.unittest))

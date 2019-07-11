@@ -29,7 +29,7 @@ class Book(models.Model):
     title = models.CharField(max_length=128)
     authors = models.ManyToManyField(Author, through='BookAuthor', related_name='authored_books')
     editors = models.ManyToManyField(Author, through='BookEditor', related_name='edited_books')
-    publisher = models.ForeignKey(Publisher, on_delete=CASCADE)
+    publisher = models.ForeignKey(Publisher, on_delete=CASCADE, null=True)
 
 
 class BookAuthor(models.Model):

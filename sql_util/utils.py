@@ -66,7 +66,7 @@ class Subquery(DjangoSubquery):
         def get_target(res_expr):
             for expression in res_expr.get_source_expressions():
                 return get_target(expression)
-            return res_expr.target
+            return res_expr.field if res_expr.target.null else res_expr.target
         return get_target(resolved_expression).model
 
     def _get_fields_model_from_path(self, path, model):
