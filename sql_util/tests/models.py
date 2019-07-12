@@ -73,7 +73,7 @@ class Category(models.Model):
 # A collection is in a single category, or no categories (nullable)
 class Collection(models.Model):
     name = models.CharField(max_length=12)
-    the_category = models.ForeignKey(Category, null=True)
+    the_category = models.ForeignKey(Category, null=True, on_delete=CASCADE)
 
 
 class Item(models.Model):
@@ -82,5 +82,5 @@ class Item(models.Model):
 
 
 class ItemCollectionM2M(models.Model):
-    thing = models.ForeignKey(Item)
-    collection_key = models.ForeignKey(Collection)
+    thing = models.ForeignKey(Item, on_delete=CASCADE)
+    collection_key = models.ForeignKey(Collection, on_delete=CASCADE)
