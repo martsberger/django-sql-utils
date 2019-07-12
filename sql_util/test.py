@@ -4,7 +4,7 @@ from django.db.models.functions import Coalesce, Cast
 from django.test import TestCase
 
 from sql_util.tests.models import (Parent, Child, Author, Book, BookAuthor, BookEditor, Publisher, Catalog, Package,
-                                   Purchase, CatalogInfo)
+                                   Purchase, CatalogInfo, Category, Collection, Item, ItemCollectionM2M)
 from sql_util.utils import SubqueryMin, SubqueryMax, SubqueryCount, Exists
 
 
@@ -421,3 +421,53 @@ class TestManyToManyExists(TestCase):
                                    'Author 4': False,
                                    'Author 5': False,
                                    'Author 6': False})
+
+
+class TestExistsReverseNames(TestCase):
+    @classmethod
+    def setUpClass(cls):
+        super(TestExistsReverseNames, cls).setUpClass()
+        categories = [
+            Category.objects.create(name='cat one'),
+            Category.objects.create(name='cat two'),
+            Category.objects.create(name='cat three'),
+        ]
+
+        collections = [
+            Collection.objects.create(name='coll one', the_category=categories[0]),
+            Collection.objects.create(name='coll two', the_category=categories[0]),
+            Collection.objects.create(name='coll three', the_category=categories[1]),
+            Collection.objects.create(name='coll four', the_category=categories[1]),
+            Collection.objects.create(name='coll five', the_category=categories[2]),
+        ]
+
+        items = [
+            Item.objects.create(name='item one'),
+            Item.objects.create(name='item two'),
+            Item.objects.create(name='item three'),
+            Item.objects.create(name='item four'),
+            Item.objects.create(name='item five'),
+            Item.objects.create(name='item six'),
+        ]
+
+        m2ms = [
+            ItemCollectionM2M.objects.create(thing=items[0], collection_key=collections[0]),
+            ItemCollectionM2M.objects.create(thing=items[1], collection_key=collections[1])
+        ]
+
+    def test_something(self):
+        annotation = {
+            'has_category': Exists('collection_key__the_category')
+        }
+
+        items = Item.objects.annotate(**annotation)
+
+        items = {item.name: item.has_category for item in items}
+
+        self.assertEqual(items, {'item one': True,
+                                 'item two': True,
+                                 'item three': False,
+                                 'item four': False,
+                                 'item five': False,
+                                 'item six': False,
+                                 })

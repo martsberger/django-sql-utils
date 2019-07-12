@@ -60,3 +60,27 @@ class Package(models.Model):
 class Purchase(models.Model):
     price = models.DecimalField(decimal_places=2, max_digits=10)
     pack = models.ForeignKey(Package, on_delete=CASCADE)
+
+
+# This section deliberately has some weird names to make sure we correctly compute forward
+# and backward joins
+
+class Category(models.Model):
+    name = models.CharField(max_length=12)
+
+
+# A collection of items. An Item can be in many Collections
+# A collection is in a single category, or no categories (nullable)
+class Collection(models.Model):
+    name = models.CharField(max_length=12)
+    the_category = models.ForeignKey(Category, null=True)
+
+
+class Item(models.Model):
+    name = models.CharField(max_length=12)
+    collection_key = models.ManyToManyField(Collection, through='ItemCollectionM2M')
+
+
+class ItemCollectionM2M(models.Model):
+    thing = models.ForeignKey(Item)
+    collection_key = models.ForeignKey(Collection)

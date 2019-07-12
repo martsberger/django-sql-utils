@@ -72,12 +72,18 @@ class Subquery(DjangoSubquery):
     def _get_fields_model_from_path(self, path, model):
         # We want the paths reversed because we have the forward join info
         # and we need the string that tells us how to go back
+        if len(path) == 1:
+            return [path[0].join_field.field.name], model
+
         paths = list(reversed(path))
 
         fields = []
         # If the first path doesn't have join_field.field, ignore it.
         if hasattr(paths[0].join_field, 'field'):
             fields.append(paths[0].join_field.field.name)
+            model = paths[0].from_opts.model
+        elif getattr(paths[0].join_field, 'related_query_name') and not paths[1].m2m:
+            fields.append(paths[0].join_field.related_query_name())
             model = paths[0].from_opts.model
 
         for path in paths[1:]:
@@ -99,17 +105,14 @@ class Subquery(DjangoSubquery):
             source = source.get_source_expressions()[0]
         field_list = source.name.split(LOOKUP_SEP)
         path, _, _, _ = query.names_to_path(field_list, query.get_meta(), allow_many=True, fail_on_missing=True)
-        if len(path) == 1:
-            reverse = path[0].join_field.field.name
+
+        fields, model = self._get_fields_model_from_path(path, model)
+        reverse = LOOKUP_SEP.join(fields)
+
+        if model == query.model or len(path) == 1:
             outer_ref = 'pk'
         else:
-            fields, model = self._get_fields_model_from_path(path, model)
-            reverse = LOOKUP_SEP.join(fields)
-
-            if model == query.model:
-                outer_ref = 'pk'
-            else:
-                outer_ref = path[0].join_field.name
+            outer_ref = path[0].join_field.name
 
         return reverse, outer_ref
 
