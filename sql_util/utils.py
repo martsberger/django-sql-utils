@@ -69,33 +69,19 @@ class Subquery(DjangoSubquery):
             return res_expr.field if res_expr.target.null else res_expr.target
         return get_target(resolved_expression).model
 
-    def _get_fields_model_from_path(self, path, model):
+    def _get_fields_model_from_path(self, path, model, target_model):
+        fields = []
+
         # We want the paths reversed because we have the forward join info
         # and we need the string that tells us how to go back
-        if len(path) == 1:
-            return [path[0].join_field.field.name], model
-
         paths = list(reversed(path))
-
-        fields = []
-        # If the first path doesn't have join_field.field, ignore it.
-        if hasattr(paths[0].join_field, 'field'):
-            fields.append(paths[0].join_field.field.name)
-            model = paths[0].from_opts.model
-        elif getattr(paths[0].join_field, 'related_query_name') and not paths[1].m2m:
-            fields.append(paths[0].join_field.related_query_name())
-            model = paths[0].from_opts.model
-
-        for path in paths[1:]:
-            # If the path is already for the current model, we can skip it
-            if path.to_opts.model != model:
-                fields.append(path.join_field.name)
-                model = path.to_opts.model
-
-        # If the last path also has join_field.field, we need the name of that too
-        if hasattr(paths[-1].join_field, 'field'):
-            fields.append(paths[-1].join_field.field.name)
-            model = paths[-1].from_opts.model
+        for p in paths:
+            if p.to_opts.model == model and ((p.from_opts.model != target_model or p.m2m) or not fields):
+                if getattr(p.join_field, 'related_query_name'):
+                    fields.append(p.join_field.related_query_name())
+                elif hasattr(p.join_field, 'field'):
+                    fields.append(p.join_field.field.name)
+                model = p.from_opts.model
 
         return fields, model
 
@@ -106,7 +92,7 @@ class Subquery(DjangoSubquery):
         field_list = source.name.split(LOOKUP_SEP)
         path, _, _, _ = query.names_to_path(field_list, query.get_meta(), allow_many=True, fail_on_missing=True)
 
-        fields, model = self._get_fields_model_from_path(path, model)
+        fields, model = self._get_fields_model_from_path(path, model, query.model)
         reverse = LOOKUP_SEP.join(fields)
 
         if model == query.model or len(path) == 1:

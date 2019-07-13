@@ -69,11 +69,16 @@ class Category(models.Model):
     name = models.CharField(max_length=12)
 
 
+class Bit(models.Model):
+    name = models.CharField(max_length=12)
+
+
 # A collection of items. An Item can be in many Collections
 # A collection is in a single category, or no categories (nullable)
 class Collection(models.Model):
     name = models.CharField(max_length=12)
     the_category = models.ForeignKey(Category, null=True, on_delete=CASCADE)
+    bits = models.ManyToManyField(Bit)
 
 
 class Item(models.Model):

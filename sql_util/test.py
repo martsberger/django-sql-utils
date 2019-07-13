@@ -4,7 +4,7 @@ from django.db.models.functions import Coalesce, Cast
 from django.test import TestCase
 
 from sql_util.tests.models import (Parent, Child, Author, Book, BookAuthor, BookEditor, Publisher, Catalog, Package,
-                                   Purchase, CatalogInfo, Category, Collection, Item, ItemCollectionM2M)
+                                   Purchase, CatalogInfo, Category, Collection, Item, ItemCollectionM2M, Bit)
 from sql_util.utils import SubqueryMin, SubqueryMax, SubqueryCount, Exists
 
 
@@ -455,7 +455,13 @@ class TestExistsReverseNames(TestCase):
             ItemCollectionM2M.objects.create(thing=items[1], collection_key=collections[1])
         ]
 
-    def test_something(self):
+        bits = [
+            Bit.objects.create(name="bit one")
+        ]
+
+        collections[0].bits.add(bits[0])
+
+    def test_name_doesnt_match(self):
         annotation = {
             'has_category': Exists('collection_key__the_category')
         }
@@ -466,6 +472,23 @@ class TestExistsReverseNames(TestCase):
 
         self.assertEqual(items, {'item one': True,
                                  'item two': True,
+                                 'item three': False,
+                                 'item four': False,
+                                 'item five': False,
+                                 'item six': False,
+                                 })
+
+    def test_name_doesnt_match_m2m(self):
+        annotation = {
+            'has_bits': Exists('collection_key__bits')
+        }
+
+        items = Item.objects.annotate(**annotation)
+
+        items = {item.name: item.has_bits for item in items}
+
+        self.assertEqual(items, {'item one': True,
+                                 'item two': False,
                                  'item three': False,
                                  'item four': False,
                                  'item five': False,
