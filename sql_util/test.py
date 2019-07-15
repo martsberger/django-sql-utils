@@ -4,7 +4,8 @@ from django.db.models.functions import Coalesce, Cast
 from django.test import TestCase
 
 from sql_util.tests.models import (Parent, Child, Author, Book, BookAuthor, BookEditor, Publisher, Catalog, Package,
-                                   Purchase, CatalogInfo, Category, Collection, Item, ItemCollectionM2M, Bit)
+                                   Purchase, CatalogInfo, Category, Collection, Item, ItemCollectionM2M, Bit, Dog, Cat,
+                                   Owner)
 from sql_util.utils import SubqueryMin, SubqueryMax, SubqueryCount, Exists
 
 
@@ -494,3 +495,35 @@ class TestExistsReverseNames(TestCase):
                                  'item five': False,
                                  'item six': False,
                                  })
+
+
+class TestGenericForeignKey(TestCase):
+    @classmethod
+    def setUpClass(cls):
+        super(TestGenericForeignKey, cls).setUpClass()
+        dogs = [
+            Dog.objects.create(name="Fido"),
+            Dog.objects.create(name="Snoopy"),
+            Dog.objects.create(name="Otis")
+        ]
+
+        cats = [
+            Cat.objects.create(name="Muffin"),
+            Cat.objects.create(name="Grumpy"),
+            Cat.objects.create(name="Garfield")
+        ]
+
+        owners = [
+            Owner.objects.create(name="Jon", pet=cats[2])
+        ]
+
+    def test_exists(self):
+        annotation = {'has_an_owner': Exists('owner')}
+
+        cats = Cat.objects.annotate(**annotation)
+
+        cats = {cat.name: cat.has_an_owner for cat in cats}
+
+        self.assertEqual(cats, {'Muffin': False,
+                                'Grumpy': False,
+                                'Garfield': True})

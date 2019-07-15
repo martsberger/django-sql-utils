@@ -1,3 +1,5 @@
+from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
+from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.db.models import CASCADE
 
@@ -89,3 +91,21 @@ class Item(models.Model):
 class ItemCollectionM2M(models.Model):
     thing = models.ForeignKey(Item, on_delete=CASCADE)
     collection_key = models.ForeignKey(Collection, on_delete=CASCADE)
+
+
+# These models will make sure this works with GenericForeignKey/GenericRelation
+
+class Dog(models.Model):
+    name = models.CharField(max_length=12)
+
+
+class Cat(models.Model):
+    name = models.CharField(max_length=12)
+    owner = GenericRelation('Owner', related_query_name='owner')
+
+
+class Owner(models.Model):
+    name = models.CharField(max_length=12)
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
+    object_id = models.PositiveIntegerField()
+    pet = GenericForeignKey('content_type', 'object_id')

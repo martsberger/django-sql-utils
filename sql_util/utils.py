@@ -78,7 +78,10 @@ class Subquery(DjangoSubquery):
         for p in paths:
             if p.to_opts.model == model and ((p.from_opts.model != target_model or p.m2m) or not fields):
                 if getattr(p.join_field, 'related_query_name'):
-                    fields.append(p.join_field.related_query_name())
+                    try:
+                        fields.append(p.join_field.related_query_name())
+                    except TypeError:  # Sometimes related_query_name is a string instead of a callable that returns a string
+                        fields.append(p.join_field.related_query_name)
                 elif hasattr(p.join_field, 'field'):
                     fields.append(p.join_field.field.name)
                 model = p.from_opts.model
