@@ -12,6 +12,10 @@ INSTALLED_APPS = (
     'sql_util.tests',
 )
 
+MIGRATION_MODULES = {'tests': None,
+                     'contenttypes': None
+                     }
+
 SITE_ID = 1,
 
 SECRET_KEY = 'secret'
