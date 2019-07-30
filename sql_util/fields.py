@@ -1,5 +1,6 @@
 import types
 
+
 def deprecate_field(field):
     """
     This function wraps a model field so that Django will stop selecting it in ORM queries, but
