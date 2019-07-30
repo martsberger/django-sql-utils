@@ -5,7 +5,7 @@ from django.test import TestCase
 
 from sql_util.tests.models import (Parent, Child, Author, Book, BookAuthor, BookEditor, Publisher, Catalog, Package,
                                    Purchase, CatalogInfo, Category, Collection, Item, ItemCollectionM2M, Bit, Dog, Cat,
-                                   Owner)
+                                   Owner, ModelToDeprecate, RelatedToDeprecated)
 from sql_util.utils import SubqueryMin, SubqueryMax, SubqueryCount, Exists
 
 
@@ -527,3 +527,51 @@ class TestGenericForeignKey(TestCase):
         self.assertEqual(cats, {'Muffin': False,
                                 'Grumpy': False,
                                 'Garfield': True})
+
+
+class TestDeprecateField(TestCase):
+    @classmethod
+    def setUpClass(cls):
+        super(TestDeprecateField, cls).setUpClass()
+
+        deprecateds = [
+            ModelToDeprecate.objects.create(name='deprecate 1', extra_column=''),
+            ModelToDeprecate.objects.create(name='deprecate 2', extra_column=''),
+            ModelToDeprecate.objects.create(name='deprecate 3', extra_column='')
+        ]
+
+        relateds = [
+            RelatedToDeprecated.objects.create(name='related 1', deprecated=deprecateds[0]),
+            RelatedToDeprecated.objects.create(name='related 2', deprecated=deprecateds[1]),
+            RelatedToDeprecated.objects.create(name='related 3', deprecated=deprecateds[0])
+        ]
+
+    def test_select(self):
+        """
+        Select queries work, and trying to access the field raises an exception
+        """
+        deprecateds = ModelToDeprecate.objects.all()
+        deprecated = deprecateds[0]
+        self.assertRaises(Exception, getattr, deprecated, 'extra_column')
+
+    def test_insert(self):
+        new_record = ModelToDeprecate(name='new model')
+        new_record.save()
+
+        retrieved_record = ModelToDeprecate.objects.get(name='new model')
+
+    def test_update(self):
+        ModelToDeprecate.objects.filter(name='deprecate 1').update(name='updated name')
+        retrieved_record = ModelToDeprecate.objects.get(name='updated name')
+
+    def test_select_through_relation(self):
+        relateds = RelatedToDeprecated.objects.filter(name='related 1')
+
+        self.assertEqual(relateds[0].deprecated.name, 'deprecate 1')
+        self.assertRaises(Exception, getattr, relateds[0].deprecated, 'extra_column')
+
+    def test_select_related(self):
+        relateds = RelatedToDeprecated.objects.filter(name='related 1').select_related('deprecated')
+
+        self.assertEqual(relateds[0].deprecated.name, 'deprecate 1')
+        self.assertRaises(Exception, getattr, relateds[0].deprecated, 'extra_column')

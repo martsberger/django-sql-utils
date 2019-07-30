@@ -3,6 +3,8 @@ from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.db.models import CASCADE
 
+from sql_util.fields import deprecate_field
+
 
 # Simple parent-child model
 class Parent(models.Model):
@@ -93,7 +95,7 @@ class ItemCollectionM2M(models.Model):
     collection_key = models.ForeignKey(Collection, on_delete=CASCADE)
 
 
-# These models will make sure this works with GenericForeignKey/GenericRelation
+# These models will make sure SubqueryAggregates and Exists works with GenericForeignKey/GenericRelation
 
 class Dog(models.Model):
     name = models.CharField(max_length=12)
@@ -109,3 +111,15 @@ class Owner(models.Model):
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     object_id = models.PositiveIntegerField()
     pet = GenericForeignKey('content_type', 'object_id')
+
+
+# Models for testing deprecated_field
+
+class ModelToDeprecate(models.Model):
+    name = models.CharField(max_length=12)
+    extra_column = deprecate_field(models.CharField(max_length=12))
+
+
+class RelatedToDeprecated(models.Model):
+    name = models.CharField(max_length=12)
+    deprecated = models.ForeignKey(ModelToDeprecate, on_delete=models.CASCADE)
