@@ -22,6 +22,24 @@ matrix:
       env: DJANGO=2.2 DB=postgres
     - python: "2.7"
       env: DJANGO=2.2 DB=sqlite
+    - python: "3.5"
+      env DJANGO=1.11 DB=mysql
+    - python: "3.5"
+      env DJANGO=1.11 DB=postgres
+    - python: "3.5"
+      env DJANGO=1.11 DB=sqlite
+    - python: "3.6"
+      env DJANGO=1.11 DB=mysql
+    - python: "3.6"
+      env DJANGO=1.11 DB=postgres
+    - python: "3.6"
+      env DJANGO=1.11 DB=sqlite
+    - python: "3.7"
+      env DJANGO=1.11 DB=mysql
+    - python: "3.7"
+      env DJANGO=1.11 DB=postgres
+    - python: "3.7"
+      env DJANGO=1.11 DB=sqlite
 
 before_script:
   - if [[ "$DB" == "mysql" ]]; then mysql -e 'create database sqlutil;'; fi
