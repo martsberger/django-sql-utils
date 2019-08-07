@@ -1,3 +1,4 @@
+from django.core.exceptions import FieldError
 from django.db.models import Q, F, QuerySet, BooleanField, Sum, Avg
 from django.db.models import Subquery as DjangoSubquery, OuterRef, IntegerField, Min, Max, Count
 from django.db.models.constants import LOOKUP_SEP
@@ -173,9 +174,9 @@ class SubqueryAggregate(Subquery):
             return c
 
         else:
-            if hasattr(resolved_expression, 'target'):
+            try:
                 return F(resolved_expression.target.name).resolve_expression(query, allow_joins, reuse, summarize)
-            else:
+            except (FieldError, AttributeError):
                 return resolved_expression
 
 

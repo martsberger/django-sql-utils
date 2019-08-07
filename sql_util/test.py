@@ -217,6 +217,53 @@ class TestManyToMany(TestCase):
                                   6: 1})
 
 
+class TestForeignKey(TestCase):
+    @classmethod
+    def setUpClass(cls):
+        super(TestForeignKey, cls).setUpClass()
+        publishers = [
+            Publisher.objects.create(name='Publisher 1', number=1),
+            Publisher.objects.create(name='Publisher 2', number=2)
+        ]
+
+        authors = [
+            Author.objects.create(name='Author 1'),
+            Author.objects.create(name='Author 2'),
+            Author.objects.create(name='Author 3'),
+            Author.objects.create(name='Author 4'),
+            Author.objects.create(name='Author 5'),
+            Author.objects.create(name='Author 6')
+        ]
+
+        books = [
+            Book.objects.create(title='Book 1', publisher=publishers[0]),
+            Book.objects.create(title='Book 2', publisher=publishers[0]),
+            Book.objects.create(title='Book 3', publisher=publishers[1]),
+            Book.objects.create(title='Book 4', publisher=publishers[1])
+        ]
+
+        book_authors = [
+            BookAuthor.objects.create(author=authors[0], book=books[0], id=1),
+            BookAuthor.objects.create(author=authors[1], book=books[1], id=2),
+            BookAuthor.objects.create(author=authors[2], book=books[1], id=3),
+            BookAuthor.objects.create(author=authors[2], book=books[2], id=4),
+            BookAuthor.objects.create(author=authors[3], book=books[2], id=5),
+            BookAuthor.objects.create(author=authors[4], book=books[3], id=6),
+        ]
+
+    def test_aggregate_foreign_key(self):
+        bookauthors = BookAuthor.objects.annotate(min_publisher_id=SubqueryMin('book__publisher_id'))
+
+        bookauthors = {bookauthor.id: bookauthor.min_publisher_id for bookauthor in bookauthors}
+
+        self.assertEqual(bookauthors, {1: 1,
+                                       2: 1,
+                                       3: 1,
+                                       4: 2,
+                                       5: 2,
+                                       6: 2})
+
+
 class TestReverseForeignKey(TestCase):
 
     @classmethod
