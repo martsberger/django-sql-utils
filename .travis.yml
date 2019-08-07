@@ -17,17 +17,11 @@ env:
 matrix:
   exclude:
     - python: "2.7"
-      env: DJANGO=2.0 DB=mysql
+      env: DJANGO=2.2 DB=mysql
     - python: "2.7"
-      env: DJANGO=2.0 DB=postgres
+      env: DJANGO=2.2 DB=postgres
     - python: "2.7"
-      env: DJANGO=2.0 DB=sqlite
-    - python: "2.7"
-      env: DJANGO=2.1 DB=sqlite
-    - python: "2.7"
-      env: DJANGO=2.1 DB=mysql
-    - python: "2.7"
-      env: DJANGO=2.1 DB=postgres
+      env: DJANGO=2.2 DB=sqlite
 
 before_script:
   - if [[ "$DB" == "mysql" ]]; then mysql -e 'create database sqlutil;'; fi
