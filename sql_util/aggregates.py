@@ -99,10 +99,14 @@ class Subquery(DjangoSubquery):
         fields, model = self._get_fields_model_from_path(path, model, query.model)
         reverse = LOOKUP_SEP.join(fields)
 
+        join_field = path[0].join_field
         if model == query.model or len(path) == 1:
-            outer_ref = 'pk'
+            try:
+                outer_ref = join_field.get_related_field().name
+            except AttributeError:
+                outer_ref = 'pk'
         else:
-            outer_ref = path[0].join_field.name
+            outer_ref = join_field.name
 
         return reverse, outer_ref
 

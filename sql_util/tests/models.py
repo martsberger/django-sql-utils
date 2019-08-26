@@ -109,3 +109,21 @@ class Owner(models.Model):
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     object_id = models.PositiveIntegerField()
     pet = GenericForeignKey('content_type', 'object_id')
+
+
+# These models will make sure this works with to_field ForeignKeys
+
+class Brand(models.Model):
+    name = models.CharField(max_length=12)
+    company_id = models.IntegerField(unique=True)
+
+
+class Product(models.Model):
+    num_purchases = models.IntegerField()
+    brand = models.ForeignKey(
+        Brand,
+        to_field='company_id',
+        related_name='products',
+        on_delete=models.CASCADE
+    )
+

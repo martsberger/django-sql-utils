@@ -5,8 +5,8 @@ from django.test import TestCase
 
 from sql_util.tests.models import (Parent, Child, Author, Book, BookAuthor, BookEditor, Publisher, Catalog, Package,
                                    Purchase, CatalogInfo, Category, Collection, Item, ItemCollectionM2M, Bit, Dog, Cat,
-                                   Owner)
-from sql_util.utils import SubqueryMin, SubqueryMax, SubqueryCount, Exists
+                                   Owner, Product, Brand)
+from sql_util.utils import SubqueryMin, SubqueryMax, SubqueryCount, Exists, SubquerySum
 
 
 class TestParentChild(TestCase):
@@ -574,3 +574,21 @@ class TestGenericForeignKey(TestCase):
         self.assertEqual(cats, {'Muffin': False,
                                 'Grumpy': False,
                                 'Garfield': True})
+
+
+class TestForeignKeyToField(TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        super(TestForeignKeyToField, cls).setUpClass()
+        brand = Brand.objects.create(name='Python', company_id=1337)
+        products = [
+            Product.objects.create(brand=brand, num_purchases=1),
+            Product.objects.create(brand=brand, num_purchases=3)
+        ]
+
+    def test_foreign_key_to_field(self):
+        brands = Brand.objects.annotate(
+            purchase_sum=SubquerySum('products__num_purchases')
+        )
+        self.assertEqual(brands.first().purchase_sum, 4)
