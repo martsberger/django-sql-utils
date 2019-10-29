@@ -7,28 +7,32 @@ from django.db.models.constants import LOOKUP_SEP
 class Subquery(DjangoSubquery):
     def __init__(self, queryset_or_expression, **extra):
         if isinstance(queryset_or_expression, QuerySet):
+            self.queryset = queryset_or_expression
+            self.query = self.queryset.query
             super(Subquery, self).__init__(queryset_or_expression, **extra)
         else:
             expression = queryset_or_expression
             if not hasattr(expression, 'resolve_expression'):
                 expression = F(expression)
             self.expression = expression
+            self.query = None
+            self.queryset = None
+            self.output_field = extra.get('output_field')
+            self.extra = extra
             self.filter = extra.pop('filter', Q())
             self.distinct = extra.pop('distinct', None)
             self.outer_ref = extra.pop('outer_ref', None)
             self.unordered = extra.pop('unordered', self.unordered)
-            original_output_field = extra.get('output_field')
-            extra['output_field'] = original_output_field or ''  # Have to pass non None output_field to super
-            super(Subquery, self).__init__(None, **extra)
-            self.output_field = original_output_field  # Set the output_field back
 
     def resolve_expression(self, query=None, allow_joins=True, reuse=None, summarize=False, for_save=False):
         # The parent class, Subquery, takes queryset as an initialization parameter
         # so self.queryset needs to be set before we call `resolve_expression`.
         # We can set it here because we now have access to the outer query object,
         # which is the first parameter of this method.
-        if self.queryset is None:
-            self.queryset = self.get_queryset(query.clone(), allow_joins, reuse, summarize)
+        if self.query is None or self.queryset is None:
+            queryset = self.get_queryset(query.clone(), allow_joins, reuse, summarize)
+            self.queryset = queryset
+            self.query = queryset.query
         return super(Subquery, self).resolve_expression(query, allow_joins, reuse, summarize, for_save)
 
     def get_queryset(self, query, allow_joins, reuse, summarize):
