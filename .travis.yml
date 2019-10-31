@@ -4,6 +4,7 @@ python:
   - "3.5"
   - "3.6"
   - "3.7"
+  - "3.8"
 services:
   - mysql
   - postgresql
@@ -14,6 +15,9 @@ env:
   - DJANGO=2.2 DB=sqlite
   - DJANGO=2.2 DB=mysql
   - DJANGO=2.2 DB=postgres
+  - DJANGO=3.0b1 DB=sqlite
+  - DJANGO=3.0b1 DB=mysql
+  - DJANGO=3.0b1 DB=postgres
 matrix:
   exclude:
     - python: "2.7"
@@ -22,23 +26,45 @@ matrix:
       env: DJANGO=2.2 DB=postgres
     - python: "2.7"
       env: DJANGO=2.2 DB=sqlite
+    - python: "2.7"
+      env: DJANGO=3.0b1 DB=mysql
+    - python: "2.7"
+      env: DJANGO=3.0b1 DB=postgres
+    - python: "2.7"
+      env: DJANGO=3.0b1 DB=sqlite
+
     - python: "3.5"
       env: DJANGO=1.11 DB=mysql
     - python: "3.5"
       env: DJANGO=1.11 DB=postgres
     - python: "3.5"
       env: DJANGO=1.11 DB=sqlite
+    - python: "3.5"
+      env: DJANGO=3.0b1 DB=mysql
+    - python: "3.5"
+      env: DJANGO=3.0b1 DB=postgres
+    - python: "3.5"
+      env: DJANGO=3.0b1 DB=sqlite
+      
     - python: "3.6"
       env: DJANGO=1.11 DB=mysql
     - python: "3.6"
       env: DJANGO=1.11 DB=postgres
     - python: "3.6"
       env: DJANGO=1.11 DB=sqlite
+
     - python: "3.7"
       env: DJANGO=1.11 DB=mysql
     - python: "3.7"
       env: DJANGO=1.11 DB=postgres
     - python: "3.7"
+      env: DJANGO=1.11 DB=sqlite
+
+    - python: "3.8"
+      env: DJANGO=1.11 DB=mysql
+    - python: "3.8"
+      env: DJANGO=1.11 DB=postgres
+    - python: "3.8"
       env: DJANGO=1.11 DB=sqlite
 
 before_script:
@@ -48,6 +74,7 @@ install:
   - pip install pip --upgrade
   - if [[ "$DB" == "mysql" && "$DJANGO" == "1.11" ]]; then pip install mysqlclient\<=1.3.13; fi
   - if [[ "$DB" == "mysql" && "$DJANGO" == "2.2" ]]; then pip install mysqlclient; fi
+  - if [[ "$DB" == "mysql" && "$DJANGO" == "3.0b1" ]]; then pip install mysqlclient; fi
   - if [[ "$DB" == "postgres" ]]; then pip install psycopg2; fi
   - pip install -q Django==$DJANGO
 script:
