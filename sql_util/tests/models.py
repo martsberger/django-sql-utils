@@ -127,3 +127,20 @@ class Product(models.Model):
         on_delete=models.CASCADE
     )
 
+# Aggregate on computed column
+
+
+class Store(models.Model):
+    name = models.CharField(max_length=12)
+
+
+class Seller(models.Model):
+    name = models.CharField(max_length=12)
+    store = models.ForeignKey(Store, on_delete=CASCADE)
+
+
+class Sale(models.Model):
+    date = models.DateField()
+    revenue = models.FloatField()
+    expenses = models.FloatField()
+    seller = models.ForeignKey(Seller, on_delete=CASCADE)

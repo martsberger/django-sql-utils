@@ -1,11 +1,13 @@
 from django.conf import settings
-from django.db.models import DateTimeField, Q, OuterRef
+from django.db.models import DateTimeField, Q, OuterRef, F
 from django.db.models.functions import Coalesce, Cast
 from django.test import TestCase
+from django.utils import timezone
 
+from sql_util.debug import pretty_print_sql
 from sql_util.tests.models import (Parent, Child, Author, Book, BookAuthor, BookEditor, Publisher, Catalog, Package,
                                    Purchase, CatalogInfo, Category, Collection, Item, ItemCollectionM2M, Bit, Dog, Cat,
-                                   Owner, Product, Brand)
+                                   Owner, Product, Brand, Store, Seller, Sale)
 from sql_util.utils import SubqueryMin, SubqueryMax, SubqueryCount, Exists, SubquerySum
 
 
@@ -592,3 +594,76 @@ class TestForeignKeyToField(TestCase):
             purchase_sum=SubquerySum('products__num_purchases')
         )
         self.assertEqual(brands.first().purchase_sum, 4)
+
+
+class TestAggregateComputedField(TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        super(TestAggregateComputedField, cls).setUpClass()
+        stores = [
+            Store.objects.create(name='Store 1'),
+            Store.objects.create(name='Store 2')
+        ]
+
+        sellers = [
+            Seller.objects.create(name='Seller 1', store=stores[0]),
+            Seller.objects.create(name='Seller 2', store=stores[0]),
+            Seller.objects.create(name='Seller 3', store=stores[1]),
+            Seller.objects.create(name='Seller 4', store=stores[1]),
+            Seller.objects.create(name='Seller 5', store=stores[1])
+        ]
+
+        sales = [
+            Sale.objects.create(date='2019-01-01', revenue=100, expenses=50, seller=sellers[0]),
+            Sale.objects.create(date='2019-01-02', revenue=101, expenses=52, seller=sellers[1]),
+            Sale.objects.create(date='2019-01-01', revenue=102, expenses=54, seller=sellers[2]),
+            Sale.objects.create(date='2019-01-01', revenue=103, expenses=56, seller=sellers[3]),
+            Sale.objects.create(date='2019-01-01', revenue=104, expenses=58, seller=sellers[4]),
+            Sale.objects.create(date='2019-01-01', revenue=105, expenses=60, seller=sellers[0]),
+            Sale.objects.create(date='2019-01-01', revenue=106, expenses=62, seller=sellers[1]),
+            Sale.objects.create(date='2019-01-01', revenue=107, expenses=64, seller=sellers[2]),
+            Sale.objects.create(date='2019-01-01', revenue=108, expenses=66, seller=sellers[3]),
+            Sale.objects.create(date='2019-01-01', revenue=109, expenses=68, seller=sellers[4]),
+            Sale.objects.create(date='2019-01-01', revenue=110, expenses=70, seller=sellers[0]),
+            Sale.objects.create(date='2019-01-01', revenue=111, expenses=72, seller=sellers[4]),
+        ]
+
+    def test_aggregate_computed_field(self):
+        from django.db.models import Sum
+
+        stores = Store.objects.annotate(
+            balance=Sum('seller__sale__revenue') - Sum('seller__sale__expenses')
+        )
+
+        for store in stores:
+            print(store.id, store.balance)
+
+        pretty_print_sql(stores)
+
+        stores = Store.objects.annotate(
+            balance=SubquerySum('seller__sale__revenue') - SubquerySum('seller__sale__expenses')
+        )
+
+        for store in stores:
+            print(store.id, store.balance)
+
+        pretty_print_sql(stores)
+
+        stores = Store.objects.annotate(
+            balance=Sum(F('seller__sale__revenue') - F('seller__sale__expenses'))
+        )
+
+        for store in stores:
+            print(store.id, store.balance)
+
+        pretty_print_sql(stores)
+
+        stores = Store.objects.annotate(
+            balance=SubquerySum(F('seller__sale__revenue') - F('seller__sale__expenses'), filter=Q(date='2019-01-02'))
+        )
+
+        for store in stores:
+            print(store.id, store.balance)
+
+        pretty_print_sql(stores)
