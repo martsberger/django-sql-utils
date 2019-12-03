@@ -15,9 +15,9 @@ env:
   - DJANGO=2.2 DB=sqlite
   - DJANGO=2.2 DB=mysql
   - DJANGO=2.2 DB=postgres
-  - DJANGO=3.0b1 DB=sqlite
-  - DJANGO=3.0b1 DB=mysql
-  - DJANGO=3.0b1 DB=postgres
+  - DJANGO=3.0 DB=sqlite
+  - DJANGO=3.0 DB=mysql
+  - DJANGO=3.0 DB=postgres
 matrix:
   exclude:
     - python: "2.7"
@@ -72,6 +72,7 @@ before_script:
   - if [[ "$DB" == "postgres" ]]; then psql -c 'create database sqlutil;' -U postgres; fi
 install:
   - pip install pip --upgrade
+  - if [[ "$DJANGO" == "1.11" ]]; then pip install sqlparse; fi
   - if [[ "$DB" == "mysql" && "$DJANGO" == "1.11" ]]; then pip install mysqlclient\<=1.3.13; fi
   - if [[ "$DB" == "mysql" && "$DJANGO" == "2.2" ]]; then pip install mysqlclient; fi
   - if [[ "$DB" == "mysql" && "$DJANGO" == "3.0b1" ]]; then pip install mysqlclient; fi
