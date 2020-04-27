@@ -259,12 +259,15 @@ class TestForeignKey(TestCase):
 
         bookauthors = {bookauthor.id: bookauthor.min_publisher_id for bookauthor in bookauthors}
 
-        self.assertEqual(bookauthors, {1: 1,
-                                       2: 1,
-                                       3: 1,
-                                       4: 2,
-                                       5: 2,
-                                       6: 2})
+        publisher1_id = Publisher.objects.get(name='Publisher 1').id
+        publisher2_id = Publisher.objects.get(name='Publisher 2').id
+
+        self.assertEqual(bookauthors, {1: publisher1_id,
+                                       2: publisher1_id,
+                                       3: publisher1_id,
+                                       4: publisher2_id,
+                                       5: publisher2_id,
+                                       6: publisher2_id})
 
 
 class TestReverseForeignKey(TestCase):
