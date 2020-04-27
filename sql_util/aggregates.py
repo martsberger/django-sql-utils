@@ -221,11 +221,11 @@ class SubqueryAvg(SubqueryAggregate):
 class Exists(Subquery):
     unordered = True
     template = 'EXISTS(%(subquery)s)'
-    output_field = BooleanField()
 
     def __init__(self, *args, **kwargs):
         self.negated = kwargs.pop('negated', False)
         super(Exists, self).__init__(*args, **kwargs)
+        self.output_field = BooleanField()
 
     def __invert__(self):
         # Be careful not to evaluate self.queryset on this line
@@ -246,5 +246,4 @@ class Exists(Subquery):
         return sql, params
 
     def get_queryset(self, query, allow_joins, reuse, summarize):
-        self.output_field = BooleanField()
         return self._get_base_queryset(query, allow_joins, reuse, summarize)

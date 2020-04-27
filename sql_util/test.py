@@ -1,10 +1,11 @@
+from unittest import skipIf
+
+import django
 from django.conf import settings
-from django.db.models import DateTimeField, Q, OuterRef, F
+from django.db.models import DateTimeField, Q, OuterRef
 from django.db.models.functions import Coalesce, Cast
 from django.test import TestCase
-from django.utils import timezone
 
-from sql_util.debug import pretty_print_sql
 from sql_util.tests.models import (Parent, Child, Author, Book, BookAuthor, BookEditor, Publisher, Catalog, Package,
                                    Purchase, CatalogInfo, Category, Collection, Item, ItemCollectionM2M, Bit, Dog, Cat,
                                    Owner, Product, Brand, Store, Seller, Sale)
@@ -366,6 +367,66 @@ class TestExists(TestCase):
         self.assertEqual(ps[1].has_children, True)
 
 
+class TestExistsFilter(TestCase):
+    @classmethod
+    def setUpClass(cls):
+        super(TestExistsFilter, cls).setUpClass()
+        publishers = [
+            Publisher.objects.create(name='Publisher 1', number=1),
+            Publisher.objects.create(name='Publisher 2', number=2)
+        ]
+
+        authors = [
+            Author.objects.create(name='Author 1'),
+            Author.objects.create(name='Author 2'),
+            Author.objects.create(name='Author 3'),
+            Author.objects.create(name='Author 4'),
+            Author.objects.create(name='Author 5'),
+        ]
+
+        books = [
+            Book.objects.create(title='Book 1', publisher=publishers[0]),
+            Book.objects.create(title='Book 2', publisher=publishers[0]),
+            Book.objects.create(title='Book 3', publisher=publishers[1]),
+            Book.objects.create(title='Book 4', publisher=publishers[1]),
+        ]
+
+        book_authors = [
+            BookAuthor.objects.create(author=authors[0], book=books[0], id=1),
+            BookAuthor.objects.create(author=authors[1], book=books[1], id=2),
+            BookAuthor.objects.create(author=authors[2], book=books[1], id=3),
+            BookAuthor.objects.create(author=authors[2], book=books[2], id=4),
+        ]
+
+        book_editors = [
+            BookEditor.objects.create(editor=authors[4], book=books[3]),
+        ]
+
+    @skipIf(django.VERSION[0] < 3, 'Feature not supported before Django 3')
+    def test_filter_on_exists(self):
+        exists = Exists('authored_books')
+        authors = Author.objects.filter(exists)
+
+        self.assertEqual([author.id for author in authors],
+                         [1, 2, 3])
+
+    @skipIf(django.VERSION[0] < 3, 'Feature not supported before Django 3')
+    def test_filter_on_negated_exists(self):
+        exists = ~Exists('authored_books')
+        authors = Author.objects.filter(exists)
+
+        self.assertEqual([author.id for author in authors],
+                         [4, 5])
+
+    @skipIf(django.VERSION[0] < 3, 'Feature not supported before Django 3')
+    def test_filter_exists_with_or(self):
+        exists = Exists('authored_books') | Exists('edited_books')
+        authors = Author.objects.filter(exists)
+
+        self.assertEqual([author.id for author in authors],
+                         [1, 2, 3, 5])
+
+
 class TestManyToManyExists(TestCase):
 
     @classmethod
@@ -594,76 +655,3 @@ class TestForeignKeyToField(TestCase):
             purchase_sum=SubquerySum('products__num_purchases')
         )
         self.assertEqual(brands.first().purchase_sum, 4)
-
-
-class TestAggregateComputedField(TestCase):
-
-    @classmethod
-    def setUpClass(cls):
-        super(TestAggregateComputedField, cls).setUpClass()
-        stores = [
-            Store.objects.create(name='Store 1'),
-            Store.objects.create(name='Store 2')
-        ]
-
-        sellers = [
-            Seller.objects.create(name='Seller 1', store=stores[0]),
-            Seller.objects.create(name='Seller 2', store=stores[0]),
-            Seller.objects.create(name='Seller 3', store=stores[1]),
-            Seller.objects.create(name='Seller 4', store=stores[1]),
-            Seller.objects.create(name='Seller 5', store=stores[1])
-        ]
-
-        sales = [
-            Sale.objects.create(date='2019-01-01', revenue=100, expenses=50, seller=sellers[0]),
-            Sale.objects.create(date='2019-01-02', revenue=101, expenses=52, seller=sellers[1]),
-            Sale.objects.create(date='2019-01-01', revenue=102, expenses=54, seller=sellers[2]),
-            Sale.objects.create(date='2019-01-01', revenue=103, expenses=56, seller=sellers[3]),
-            Sale.objects.create(date='2019-01-01', revenue=104, expenses=58, seller=sellers[4]),
-            Sale.objects.create(date='2019-01-01', revenue=105, expenses=60, seller=sellers[0]),
-            Sale.objects.create(date='2019-01-01', revenue=106, expenses=62, seller=sellers[1]),
-            Sale.objects.create(date='2019-01-01', revenue=107, expenses=64, seller=sellers[2]),
-            Sale.objects.create(date='2019-01-01', revenue=108, expenses=66, seller=sellers[3]),
-            Sale.objects.create(date='2019-01-01', revenue=109, expenses=68, seller=sellers[4]),
-            Sale.objects.create(date='2019-01-01', revenue=110, expenses=70, seller=sellers[0]),
-            Sale.objects.create(date='2019-01-01', revenue=111, expenses=72, seller=sellers[4]),
-        ]
-
-    def test_aggregate_computed_field(self):
-        from django.db.models import Sum
-
-        stores = Store.objects.annotate(
-            balance=Sum('seller__sale__revenue') - Sum('seller__sale__expenses')
-        )
-
-        for store in stores:
-            print(store.id, store.balance)
-
-        pretty_print_sql(stores)
-
-        stores = Store.objects.annotate(
-            balance=SubquerySum('seller__sale__revenue') - SubquerySum('seller__sale__expenses')
-        )
-
-        for store in stores:
-            print(store.id, store.balance)
-
-        pretty_print_sql(stores)
-
-        stores = Store.objects.annotate(
-            balance=Sum(F('seller__sale__revenue') - F('seller__sale__expenses'))
-        )
-
-        for store in stores:
-            print(store.id, store.balance)
-
-        pretty_print_sql(stores)
-
-        stores = Store.objects.annotate(
-            balance=SubquerySum(F('seller__sale__revenue') - F('seller__sale__expenses'), filter=Q(date='2019-01-02'))
-        )
-
-        for store in stores:
-            print(store.id, store.balance)
-
-        pretty_print_sql(stores)
