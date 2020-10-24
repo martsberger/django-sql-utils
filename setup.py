@@ -11,11 +11,11 @@ def read_file(name):
 
 setup(
     name='django-sql-utils',
-    version='0.6.0',
+    version='0.6.1',
     description='Improved API for aggregating using Subquery',
     long_description=read_file('README.rst'),
     url='https://github.com/martsberger/django-sql-utils',
-    download_url='https://github.com/martsberger/django-sql-utils/archive/0.6.0.tar.gz',
+    download_url='https://github.com/martsberger/django-sql-utils/archive/0.6.1.tar.gz',
     author='Brad Martsberger',
     author_email='bmarts@lumere.com',
     license='MIT',
