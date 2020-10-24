@@ -1,6 +1,5 @@
 language: python
 python:
-  - "2.7"
   - "3.5"
   - "3.6"
   - "3.7"
@@ -20,19 +19,6 @@ env:
   - DJANGO=3.1 DB=postgres
 matrix:
   exclude:
-    - python: "2.7"
-      env: DJANGO=2.2 DB=mysql
-    - python: "2.7"
-      env: DJANGO=2.2 DB=postgres
-    - python: "2.7"
-      env: DJANGO=2.2 DB=sqlite
-    - python: "2.7"
-      env: DJANGO=3.0 DB=mysql
-    - python: "2.7"
-      env: DJANGO=3.0 DB=postgres
-    - python: "2.7"
-      env: DJANGO=3.0 DB=sqlite
-
     - python: "3.5"
       env: DJANGO=1.11 DB=mysql
     - python: "3.5"
@@ -40,11 +26,11 @@ matrix:
     - python: "3.5"
       env: DJANGO=1.11 DB=sqlite
     - python: "3.5"
-      env: DJANGO=3.0 DB=mysql
+      env: DJANGO=3.1 DB=mysql
     - python: "3.5"
-      env: DJANGO=3.0 DB=postgres
+      env: DJANGO=3.1 DB=postgres
     - python: "3.5"
-      env: DJANGO=3.0 DB=sqlite
+      env: DJANGO=3.1 DB=sqlite
       
     - python: "3.6"
       env: DJANGO=1.11 DB=mysql
