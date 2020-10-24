@@ -140,6 +140,7 @@ class SubqueryAggregate(Subquery):
 
     def __init__(self, *args, **extra):
         self.aggregate = extra.pop('aggregate', self.aggregate)
+        self.ordering = extra.pop('ordering', None)
         assert self.aggregate is not None, "Error: Attempt to instantiate a " \
                                            "SubqueryAggregate with no aggregate function"
         super(SubqueryAggregate, self).__init__(*args, **extra)
@@ -148,6 +149,12 @@ class SubqueryAggregate(Subquery):
         queryset = self._get_base_queryset(query, allow_joins, reuse, summarize)
         annotation = self._get_annotation(query, allow_joins, reuse, summarize)
         return queryset.annotate(**annotation).values('aggregation')
+
+    def aggregate_kwargs(self):
+        if self.distinct:
+            return {'distinct': self.distinct}
+        else:
+            return dict()
 
     def _get_annotation(self, query, allow_joins, reuse, summarize):
         resolved_expression = self.expression.resolve_expression(query, allow_joins, reuse, summarize)
@@ -162,10 +169,11 @@ class SubqueryAggregate(Subquery):
 
         if not self.output_field:
             self._output_field = self.output_field = target_expression.field
-        if self.distinct is not None:
-            aggregation = self.aggregate(target_expression, distinct=self.distinct)
-        else:
-            aggregation = self.aggregate(target_expression)
+
+        kwargs = self.aggregate_kwargs()
+
+        aggregation = self.aggregate(target_expression, **kwargs)
+
         annotation = {
             'aggregation': aggregation
         }
