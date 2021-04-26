@@ -144,3 +144,19 @@ class Sale(models.Model):
     revenue = models.FloatField()
     expenses = models.FloatField()
     seller = models.ForeignKey(Seller, on_delete=CASCADE)
+
+
+# Want to test the case where a model has two foreign keys to the same model
+class Player(models.Model):
+    nickname = models.CharField(max_length=128)
+
+
+class Team(models.Model):
+    name = models.CharField(max_length=128)
+    players = models.ManyToManyField(Player)
+
+
+class Game(models.Model):
+    played = models.DateField()
+    team1 = models.ForeignKey(Team, on_delete=CASCADE, related_name='team1_game')
+    team2 = models.ForeignKey(Team, on_delete=CASCADE, related_name='team2_game')

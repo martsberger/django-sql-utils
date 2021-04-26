@@ -2,13 +2,13 @@ from unittest import skipIf
 
 import django
 from django.conf import settings
-from django.db.models import DateTimeField, Q, OuterRef
+from django.db.models import DateTimeField, Q, OuterRef, Count, Subquery
 from django.db.models.functions import Coalesce, Cast
 from django.test import TestCase
 
 from sql_util.tests.models import (Parent, Child, Author, Book, BookAuthor, BookEditor, Publisher, Catalog, Package,
                                    Purchase, CatalogInfo, Category, Collection, Item, ItemCollectionM2M, Bit, Dog, Cat,
-                                   Owner, Product, Brand, Store, Seller, Sale)
+                                   Owner, Product, Brand, Store, Seller, Sale, Player, Team, Game)
 from sql_util.utils import SubqueryMin, SubqueryMax, SubqueryCount, Exists, SubquerySum
 
 
@@ -658,3 +658,42 @@ class TestForeignKeyToField(TestCase):
             purchase_sum=SubquerySum('products__num_purchases')
         )
         self.assertEqual(brands.first().purchase_sum, 4)
+
+
+class TestMultipleForeignKeyToTheSameModel(TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        super(TestMultipleForeignKeyToTheSameModel, cls).setUpClass()
+
+        player1 = Player.objects.create(nickname='Player 1')
+        player2 = Player.objects.create(nickname='Player 2')
+        player3 = Player.objects.create(nickname='Player 3')
+        player4 = Player.objects.create(nickname='Player 4')
+        player5 = Player.objects.create(nickname='Player 5')
+        player6 = Player.objects.create(nickname='Player 6')
+
+        team1 = Team.objects.create(name='Team 1')
+        team2 = Team.objects.create(name='Team 2')
+        team3 = Team.objects.create(name='Team 3')
+
+        team1.players.add(player1, player2, player3)
+        team2.players.add(player4, player5)
+        team3.players.add(player6)
+
+        game1 = Game.objects.create(team1=team1, team2=team2, played='2021-02-10')
+        game2 = Game.objects.create(team1=team1, team2=team3, played='2021-02-13')
+        game3 = Game.objects.create(team1=team1, team2=team2, played='2021-02-16')
+        game4 = Game.objects.create(team1=team2, team2=team3, played='2021-02-19')
+        game5 = Game.objects.create(team1=team2, team2=team3, played='2021-02-22')
+
+    def test_player_count(self):
+        team1_count_subquery_count = SubqueryCount('team1__players')
+        team2_count_subquery_count = SubqueryCount('team2__players')
+
+        games = Game.objects.annotate(team1_count=team1_count_subquery_count,
+                                      team2_count=team2_count_subquery_count)
+
+        for g in games:
+            self.assertEqual(g.team1_count, g.team1.players.count())
+            self.assertEqual(g.team2_count, g.team2.players.count())
