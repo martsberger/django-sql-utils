@@ -26,7 +26,7 @@ matrix:
     - python: "3.5"
       env: DJANGO=3.1 DB=sqlite
     - python: "3.5"
-      env: DJANGO=3.2 DB=sqlite
+      env: DJANGO=3.2 DB=mysql
     - python: "3.5"
       env: DJANGO=3.2 DB=postgres
     - python: "3.5"
