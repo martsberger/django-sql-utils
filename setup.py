@@ -11,7 +11,7 @@ def read_file(name):
 
 setup(
     name='django-sql-utils',
-    version='0.6.1',
+    version='0.7.0',
     description='Improved API for aggregating using Subquery',
     long_description=read_file('README.rst'),
     url='https://github.com/martsberger/django-sql-utils',
