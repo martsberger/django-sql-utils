@@ -151,10 +151,13 @@ class SubqueryAggregate(Subquery):
         return queryset.annotate(**annotation).values('aggregation')
 
     def aggregate_kwargs(self):
+        aggregate_kwargs = dict()
         if self.distinct:
-            return {'distinct': self.distinct}
-        else:
-            return dict()
+            aggregate_kwargs['distinct'] = self.distinct
+        if self.ordering:
+            aggregate_kwargs['ordering'] = self.ordering
+
+        return aggregate_kwargs
 
     def _get_annotation(self, query, allow_joins, reuse, summarize):
         resolved_expression = self.expression.resolve_expression(query, allow_joins, reuse, summarize)
