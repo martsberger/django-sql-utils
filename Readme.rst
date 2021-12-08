@@ -1,3 +1,6 @@
+.. image:: https://badge.fury.io/py/django-sql-utils.svg
+    :target: http://badge.fury.io/py/django-sql-utils
+
 .. image:: https://travis-ci.org/martsberger/django-sql-utils.svg?branch=master
     :target: https://travis-ci.org/martsberger/django-sql-utils
 
