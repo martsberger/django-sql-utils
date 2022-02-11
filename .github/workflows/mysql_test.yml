@@ -1,4 +1,4 @@
-name: Postgres Test
+name: Mysql Test
 
 on:
   push:
