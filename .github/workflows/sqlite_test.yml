@@ -32,8 +32,11 @@ jobs:
     - name: Install Dependencies
       run: |
         python -m pip install --upgrade pip
+        pip install coverage
+        pip install codecov
         pip install sqlparse
         pip install -q Django==${{ matrix.django-version }}
     - name: Run Tests
       run: |
-        python runtests.py --settings=sql_util.tests.test_sqlite_settings
+        coverage run --omit="*site-packages*","*test*" python runtests.py --settings=sql_util.tests.test_sqlite_settings
+        codecov
