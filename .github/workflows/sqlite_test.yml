@@ -38,5 +38,5 @@ jobs:
         pip install -q Django==${{ matrix.django-version }}
     - name: Run Tests
       run: |
-        coverage run --omit="*site-packages*","*test*" python runtests.py --settings=sql_util.tests.test_sqlite_settings
+        coverage run --omit="*site-packages*","*test*" runtests.py --settings=sql_util.tests.test_sqlite_settings
         codecov
