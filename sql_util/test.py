@@ -1,6 +1,3 @@
-from unittest import skipIf
-
-import django
 from django.conf import settings
 from django.db.models import DateTimeField, Q, OuterRef, Count, Subquery
 from django.db.models.functions import Coalesce, Cast
@@ -405,29 +402,26 @@ class TestExistsFilter(TestCase):
             BookEditor.objects.create(editor=authors[4], book=books[3]),
         ]
 
-    @skipIf(django.VERSION[0] < 3, 'Feature not supported before Django 3')
     def test_filter_on_exists(self):
         exists = Exists('authored_books')
         authors = Author.objects.filter(exists)
 
-        self.assertEqual([author.id for author in authors],
-                         [1, 2, 3])
+        self.assertEqual({author.id for author in authors},
+                         {1, 2, 3})
 
-    @skipIf(django.VERSION[0] < 3, 'Feature not supported before Django 3')
     def test_filter_on_negated_exists(self):
         exists = ~Exists('authored_books')
         authors = Author.objects.filter(exists)
 
-        self.assertEqual([author.id for author in authors],
-                         [4, 5])
+        self.assertEqual({author.id for author in authors},
+                         {4, 5})
 
-    @skipIf(django.VERSION[0] < 3, 'Feature not supported before Django 3')
     def test_filter_exists_with_or(self):
         exists = Exists('authored_books') | Exists('edited_books')
         authors = Author.objects.filter(exists)
 
-        self.assertEqual([author.id for author in authors],
-                         [1, 2, 3, 5])
+        self.assertEqual({author.id for author in authors},
+                         {1, 2, 3, 5})
 
 
 class TestManyToManyExists(TestCase):
