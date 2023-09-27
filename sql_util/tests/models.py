@@ -8,6 +8,9 @@ from django.db.models import CASCADE
 class Parent(models.Model):
     name = models.CharField(max_length=32)
 
+    class Meta:
+        ordering = ['name']
+
 
 class Child(models.Model):
     name = models.CharField(max_length=32)
@@ -21,10 +24,15 @@ class Child(models.Model):
 class Author(models.Model):
     name = models.CharField(max_length=32)
 
+    class Meta:
+        ordering = ['name']
 
 class Publisher(models.Model):
     name = models.CharField(max_length=32)
     number = models.IntegerField()
+
+    class Meta:
+        ordering = ['name']
 
 
 class Book(models.Model):
@@ -32,6 +40,9 @@ class Book(models.Model):
     authors = models.ManyToManyField(Author, through='BookAuthor', related_name='authored_books')
     editors = models.ManyToManyField(Author, through='BookEditor', related_name='edited_books')
     publisher = models.ForeignKey(Publisher, on_delete=CASCADE, null=True)
+
+    class Meta:
+        ordering = ['title']
 
 
 class BookAuthor(models.Model):
@@ -137,6 +148,8 @@ class Store(models.Model):
 class Seller(models.Model):
     name = models.CharField(max_length=12)
     store = models.ForeignKey(Store, on_delete=CASCADE)
+    average_revenue = models.FloatField(default=0)
+    total_sales = models.IntegerField(default=0)
 
 
 class Sale(models.Model):

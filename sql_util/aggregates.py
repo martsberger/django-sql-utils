@@ -30,7 +30,8 @@ class Subquery(DjangoSubquery):
         # We can set it here because we now have access to the outer query object,
         # which is the first parameter of this method.
         if self.query is None or self.queryset is None:
-            queryset = self.get_queryset(query.clone(), allow_joins, reuse, summarize)
+            # Don't pass allow_joins = False here
+            queryset = self.get_queryset(query.clone(), True, reuse, summarize)
             self.queryset = queryset
             self.query = queryset.query
         return super(Subquery, self).resolve_expression(query, allow_joins, reuse, summarize, for_save)

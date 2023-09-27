@@ -24,3 +24,5 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
 )
+
+DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
