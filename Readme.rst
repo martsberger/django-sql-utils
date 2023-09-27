@@ -1,5 +1,8 @@
-.. image:: https://travis-ci.org/martsberger/django-sql-utils.svg?branch=master
-    :target: https://travis-ci.org/martsberger/django-sql-utils
+.. image:: https://codecov.io/gh/martsberger/django-sql-utils/branch/master/graph/badge.svg
+  :target: https://codecov.io/gh/martsberger/django-sql-utils
+
+.. image:: https://img.shields.io/pypi/dm/django-sql-utils.svg
+    :target: https://pypistats.org/packages/django-sql-utils
 
 
 Django SQL Utils
