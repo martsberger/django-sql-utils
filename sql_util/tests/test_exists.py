@@ -3,8 +3,8 @@ from django.test import TestCase
 
 from sql_util.tests.models import (Parent, Child, Author, Book, BookAuthor, BookEditor, Publisher,
                                    Category, Collection, Item, ItemCollectionM2M, Bit, Dog, Cat,
-                                   Owner, Product, Brand, Player, Team, Game)
-from sql_util.utils import SubqueryCount, Exists, SubquerySum
+                                   Owner)
+from sql_util.utils import Exists
 
 class TestExists(TestCase):
 
@@ -31,7 +31,7 @@ class TestExists(TestCase):
         self.assertEqual(ps[1].has_children, False)
 
     def test_easy_exists(self):
-        ps = Parent.objects.annotate(has_children=Exists('child')).order_by('pk')
+        ps = Parent.objects.annotate(has_children=Exists('da_child')).order_by('pk')
         ps = list(ps)
 
         self.assertEqual(ps[0].has_children, True)
@@ -45,7 +45,7 @@ class TestExists(TestCase):
         self.assertEqual(ps[1].has_children, True)
 
     def test_easy_negated_exists(self):
-        ps = Parent.objects.annotate(has_children=~Exists('child')).order_by('pk')
+        ps = Parent.objects.annotate(has_children=~Exists('da_child')).order_by('pk')
         ps = list(ps)
 
         self.assertEqual(ps[0].has_children, False)
@@ -319,60 +319,3 @@ class TestGenericForeignKey(TestCase):
         self.assertEqual(cats, {'Muffin': False,
                                 'Grumpy': False,
                                 'Garfield': True})
-
-
-class TestForeignKeyToField(TestCase):
-
-    @classmethod
-    def setUpClass(cls):
-        super(TestForeignKeyToField, cls).setUpClass()
-        brand = Brand.objects.create(name='Python', company_id=1337)
-        products = [
-            Product.objects.create(brand=brand, num_purchases=1),
-            Product.objects.create(brand=brand, num_purchases=3)
-        ]
-
-    def test_foreign_key_to_field(self):
-        brands = Brand.objects.annotate(
-            purchase_sum=SubquerySum('products__num_purchases')
-        )
-        self.assertEqual(brands.first().purchase_sum, 4)
-
-
-class TestMultipleForeignKeyToTheSameModel(TestCase):
-
-    @classmethod
-    def setUpClass(cls):
-        super(TestMultipleForeignKeyToTheSameModel, cls).setUpClass()
-
-        player1 = Player.objects.create(nickname='Player 1')
-        player2 = Player.objects.create(nickname='Player 2')
-        player3 = Player.objects.create(nickname='Player 3')
-        player4 = Player.objects.create(nickname='Player 4')
-        player5 = Player.objects.create(nickname='Player 5')
-        player6 = Player.objects.create(nickname='Player 6')
-
-        team1 = Team.objects.create(name='Team 1')
-        team2 = Team.objects.create(name='Team 2')
-        team3 = Team.objects.create(name='Team 3')
-
-        team1.players.add(player1, player2, player3)
-        team2.players.add(player4, player5)
-        team3.players.add(player6)
-
-        game1 = Game.objects.create(team1=team1, team2=team2, played='2021-02-10')
-        game2 = Game.objects.create(team1=team1, team2=team3, played='2021-02-13')
-        game3 = Game.objects.create(team1=team1, team2=team2, played='2021-02-16')
-        game4 = Game.objects.create(team1=team2, team2=team3, played='2021-02-19')
-        game5 = Game.objects.create(team1=team2, team2=team3, played='2021-02-22')
-
-    def test_player_count(self):
-        team1_count_subquery_count = SubqueryCount('team1__players')
-        team2_count_subquery_count = SubqueryCount('team2__players')
-
-        games = Game.objects.annotate(team1_count=team1_count_subquery_count,
-                                      team2_count=team2_count_subquery_count)
-
-        for g in games:
-            self.assertEqual(g.team1_count, g.team1.players.count())
-            self.assertEqual(g.team2_count, g.team2.players.count())

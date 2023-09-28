@@ -1,5 +1,5 @@
 from django.core.exceptions import FieldError
-from django.db.models import Q, F, QuerySet, BooleanField, Sum, Avg
+from django.db.models import Q, F, QuerySet, BooleanField, Sum, Avg, ForeignKey
 from django.db.models import Subquery as DjangoSubquery, OuterRef, IntegerField, Min, Max, Count
 from django.db.models.constants import LOOKUP_SEP
 
@@ -83,7 +83,7 @@ class Subquery(DjangoSubquery):
         paths = list(reversed(path))
         for p in paths:
             if p.to_opts.model == model and ((p.from_opts.model != target_model or p.m2m) or not fields):
-                if getattr(p.join_field, 'related_query_name'):
+                if getattr(p.join_field, 'related_query_name', None) and isinstance(p.join_field, ForeignKey):
                     try:
                         fields.append(p.join_field.related_query_name())
                     except TypeError:  # Sometimes related_query_name is a string instead of a callable that returns a string

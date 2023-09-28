@@ -14,7 +14,7 @@ class Parent(models.Model):
 
 class Child(models.Model):
     name = models.CharField(max_length=32)
-    parent = models.ForeignKey(Parent, on_delete=CASCADE)
+    parent = models.ForeignKey(Parent, on_delete=CASCADE, related_name='a_child', related_query_name='da_child')
     timestamp = models.DateTimeField()
     other_timestamp = models.DateTimeField(null=True)
 

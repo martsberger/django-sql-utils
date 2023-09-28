@@ -3,9 +3,9 @@ from django.db.models import DateTimeField, Q
 from django.db.models.functions import Coalesce, Cast
 from django.test import TestCase
 
-from sql_util.aggregates import SubqueryAvg
+from sql_util.aggregates import SubqueryAvg, SubquerySum
 from sql_util.tests.models import (Parent, Child, Author, Book, BookAuthor, BookEditor, Publisher, Catalog, Package,
-                                   Purchase, CatalogInfo, Store, Seller, Sale)
+                                   Purchase, CatalogInfo, Store, Seller, Sale, Player, Team, Game, Brand, Product)
 from sql_util.utils import SubqueryMin, SubqueryMax, SubqueryCount
 
 
@@ -27,7 +27,7 @@ class TestParentChild(TestCase):
 
     def test_subquery_min(self):
         annotation = {
-            'oldest_child_timestamp': SubqueryMin('child__timestamp',
+            'oldest_child_timestamp': SubqueryMin('da_child__timestamp',
                                                   output_field=DateTimeField())
         }
 
@@ -39,7 +39,7 @@ class TestParentChild(TestCase):
 
     def test_subquery_max(self):
         annotation = {
-            'youngest_child_timestamp': SubqueryMax('child__timestamp',
+            'youngest_child_timestamp': SubqueryMax('da_child__timestamp',
                                                     output_field=DateTimeField())
         }
 
@@ -51,7 +51,7 @@ class TestParentChild(TestCase):
 
     def test_subquery_count(self):
         annotation = {
-            'child_count': SubqueryCount('child')
+            'child_count': SubqueryCount('da_child')
         }
 
         parents = Parent.objects.annotate(**annotation)
@@ -62,7 +62,7 @@ class TestParentChild(TestCase):
 
     def test_subquery_count_filtered(self):
         annotation = {
-            'child_count': SubqueryCount('child', filter=Q(name='Jan'))
+            'child_count': SubqueryCount('da_child', filter=Q(name='Jan'))
         }
 
         parents = Parent.objects.annotate(**annotation)
@@ -76,12 +76,12 @@ class TestParentChild(TestCase):
             # Explicit cast for MySQL with Coalesce and Datetime
             # https://docs.djangoproject.com/en/2.1/ref/models/database-functions/#coalesce
             annotation = {
-                'oldest_child_with_other': Cast(SubqueryMin(Coalesce('child__other_timestamp', 'child__timestamp'),
+                'oldest_child_with_other': Cast(SubqueryMin(Coalesce('da_child__other_timestamp', 'da_child__timestamp'),
                                                             output_field=DateTimeField()), DateTimeField())
             }
         else:
             annotation = {
-                'oldest_child_with_other': SubqueryMin(Coalesce('child__other_timestamp', 'child__timestamp'),
+                'oldest_child_with_other': SubqueryMin(Coalesce('da_child__other_timestamp', 'da_child__timestamp'),
                                                        output_field=DateTimeField())
             }
 
@@ -361,3 +361,59 @@ class TestUpdate(TestCase):
                          [{'name': 'Seller 1', 'average_revenue': 2.625},
                           {'name': 'Seller 2', 'average_revenue': 1.9}
                           ])
+
+class TestForeignKeyToField(TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        super(TestForeignKeyToField, cls).setUpClass()
+        brand = Brand.objects.create(name='Python', company_id=1337)
+        products = [
+            Product.objects.create(brand=brand, num_purchases=1),
+            Product.objects.create(brand=brand, num_purchases=3)
+        ]
+
+    def test_foreign_key_to_field(self):
+        brands = Brand.objects.annotate(
+            purchase_sum=SubquerySum('products__num_purchases')
+        )
+        self.assertEqual(brands.first().purchase_sum, 4)
+
+
+class TestMultipleForeignKeyToTheSameModel(TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        super(TestMultipleForeignKeyToTheSameModel, cls).setUpClass()
+
+        player1 = Player.objects.create(nickname='Player 1')
+        player2 = Player.objects.create(nickname='Player 2')
+        player3 = Player.objects.create(nickname='Player 3')
+        player4 = Player.objects.create(nickname='Player 4')
+        player5 = Player.objects.create(nickname='Player 5')
+        player6 = Player.objects.create(nickname='Player 6')
+
+        team1 = Team.objects.create(name='Team 1')
+        team2 = Team.objects.create(name='Team 2')
+        team3 = Team.objects.create(name='Team 3')
+
+        team1.players.add(player1, player2, player3)
+        team2.players.add(player4, player5)
+        team3.players.add(player6)
+
+        game1 = Game.objects.create(team1=team1, team2=team2, played='2021-02-10')
+        game2 = Game.objects.create(team1=team1, team2=team3, played='2021-02-13')
+        game3 = Game.objects.create(team1=team1, team2=team2, played='2021-02-16')
+        game4 = Game.objects.create(team1=team2, team2=team3, played='2021-02-19')
+        game5 = Game.objects.create(team1=team2, team2=team3, played='2021-02-22')
+
+    def test_player_count(self):
+        team1_count_subquery_count = SubqueryCount('team1__players')
+        team2_count_subquery_count = SubqueryCount('team2__players')
+
+        games = Game.objects.annotate(team1_count=team1_count_subquery_count,
+                                      team2_count=team2_count_subquery_count)
+
+        for g in games:
+            self.assertEqual(g.team1_count, g.team1.players.count())
+            self.assertEqual(g.team2_count, g.team2.players.count())
