@@ -1,0 +1,26 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "django-sql-utils"
+version = "0.7.0"
+authors = [
+  { name="Brad Martsberger", email="bradley.marts@gmail.com" },
+]
+description = "Improved API for aggregating using Subquery"
+readme = "Readme.rst"
+requires-python = ">=3.8"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "django>=3.2",
+    "sqlparse"
+]
+
+[project.urls]
+"Homepage" = "https://github.com/martsberger/django-sql-utils"
+"Download" = "https://github.com/martsberger/django-sql-utils/archive/0.7.0.tar.gz"
